@@ -1,0 +1,1756 @@
+/* ---------- Couleurs et réglages généraux ---------- */
+/* Palette de l'app. Règle : jamais de texte orange sur fond clair
+   (pas assez lisible) ; sur l'orange, le texte est bleu marine. */
+:root {
+  --fond: #e9eef5;          /* fond uni de secours (sous le dégradé) */
+  --carte: #ffffff;
+  --texte: #0a2342;         /* texte et titres (bleu marine) */
+  --gris: #4a5d78;          /* texte secondaire */
+  --accent: #ff6a00;        /* accent principal (orange), texte marine dessus */
+  --accent-survol: #ff9b54; /* survol et appui de l'accent ; icônes des vignettes */
+  --bleu: #2c6e9a;          /* éléments actifs et secondaires, texte blanc dessus */
+  --bleu-pale: rgba(44, 110, 154, 0.14); /* pastilles, onglet actif */
+  --bouton-bord: #c9d4e2;   /* bordures discrètes */
+  --rouge: #b42318;         /* suppression */
+  --voile: rgba(10, 35, 66, 0.45); /* voile sombre derrière les panneaux */
+  --duree: 180ms;           /* durée des animations (entre 150 et 280 ms) */
+  --courbe: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out doux */
+
+  /* Effet « verre » : blanc translucide, bord clair, ombre douce */
+  --verre-fond: rgba(255, 255, 255, 0.65);
+  --verre-bord: 1px solid rgba(255, 255, 255, 0.9);
+  --verre-ombre: 0 8px 22px rgba(10, 35, 66, 0.09);
+  --verre-flou: blur(14px);
+
+  /* Distance entre le bas de l'écran et la barre du bas (au moins la
+     zone de la barre d'accueil de l'iPhone) */
+  --bas-barre: max(22px, env(safe-area-inset-bottom));
+}
+
+* { box-sizing: border-box; }
+
+/* Un élément marqué "hidden" reste toujours caché,
+   même si une règle plus bas lui donne un "display" */
+[hidden] { display: none !important; }
+
+html { background: var(--fond); }
+
+body {
+  margin: 0;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--texte);
+  line-height: 1.4;
+  padding: 0 16px;
+}
+
+/* Fond : dégradé + 2 halos de couleur (bleu en haut à gauche, orange à
+   droite au milieu). Posé sur un calque fixe derrière tout : il ne bouge
+   pas quand la page défile (et ne coûte rien au défilement). */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(70vmax 60vmax at -10% -5%, rgba(44, 110, 154, 0.26), transparent 60%),
+    radial-gradient(60vmax 55vmax at 110% 50%, rgba(255, 155, 84, 0.24), transparent 60%),
+    linear-gradient(170deg, #eef3fa, #dde8f5 55%, #e6ecf6);
+}
+
+main {
+  max-width: 600px;
+  margin: 0 auto;
+  /* Place libre sous la liste : la barre du bas ne cache jamais la dernière carte */
+  padding-bottom: calc(var(--bas-barre) + 72px + 28px);
+}
+
+h1, h2 { color: var(--texte); }
+
+/* Icônes SVG dessinées au trait, de la couleur du texte autour */
+.icone-svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+
+/* ---------- Effet verre (réutilisable) ---------- */
+/* .verre : sans flou, pour ce qui est posé sur le fond (cartes, carrés) :
+   derrière, il n'y a que le dégradé, le flou ne se verrait pas et
+   ralentirait le défilement sur iPhone.
+   .verre-flou : avec flou, pour ce qui passe au-dessus du contenu
+   (barre du bas, panneaux, menu). */
+.verre,
+.verre-flou {
+  background: var(--verre-fond);
+  border: var(--verre-bord);
+  box-shadow: var(--verre-ombre);
+}
+.verre-flou {
+  -webkit-backdrop-filter: var(--verre-flou);
+  backdrop-filter: var(--verre-flou);
+}
+
+/* ---------- En-tête ---------- */
+/* Gauche : logo W puis « Bonjour » / « Womack » (ou nombre / catégorie) ;
+   droite : bouton Réglages */
+.entete {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  height: 48px;
+  box-sizing: content-box;
+  padding-top: max(54px, calc(env(safe-area-inset-top) + 10px));
+  margin-bottom: 20px;
+}
+/* margin-right: auto pousse le bouton Réglages tout à droite
+   et garde le logo collé aux textes */
+.entete-textes { position: relative; z-index: 1; min-width: 0; margin-right: auto; }
+.entete-petit { margin: 0; font-size: 14px; line-height: 1.2; color: var(--gris); }
+.entete-grand {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+/* Logo W : à gauche de « Bonjour Womack », plus petit, pâli à 40 % */
+.titre-app {
+  flex-shrink: 0;
+  margin: 0;
+  pointer-events: none;
+}
+.logo { display: block; width: 40px; height: auto; opacity: 0.4; }
+
+.entete-boutons { position: relative; z-index: 1; display: flex; gap: 8px; flex-shrink: 0; }
+/* Bouton rond de 48 px (Réglages) : verre, icône bleue */
+.bouton-entete {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  background: var(--verre-fond);
+  border: var(--verre-bord);
+  box-shadow: var(--verre-ombre);
+  color: var(--bleu);
+}
+
+/* ---------- Accueil : 2 carrés (Recettes, Cocktails) ---------- */
+.carres { display: flex; gap: 8px; }
+.carre {
+  flex: 1;
+  min-width: 0;
+  height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 2px;
+  border-radius: 30px;
+  color: var(--texte);
+  font: inherit;
+  text-align: center;
+}
+.carre-pastille {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-bottom: 2px;
+  border-radius: 50%;
+  background: var(--bleu-pale);
+  color: var(--bleu);
+}
+.carre-pastille .icone-svg { width: 16px; height: 16px; }
+.carre-nombre { font-size: 24px; font-weight: 800; line-height: 1.1; }
+.carre-libelle {
+  max-width: 100%;
+  font-size: 11px;
+  color: var(--gris);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.titre-section { margin: 26px 4px 12px; font-size: 18px; font-weight: 800; }
+
+/* ---------- Cartes de la liste ---------- */
+.liste { list-style: none; padding: 0; margin: 0; }
+
+.carte {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 8px 10px 10px;
+  margin-bottom: 10px;
+  border-radius: 30px;
+  background: var(--verre-fond);
+  border: var(--verre-bord);
+  box-shadow: var(--verre-ombre);
+}
+/* Page catégorie : cartes un peu plus grandes */
+#liste .carte { border-radius: 32px; padding: 12px 8px 12px 12px; }
+/* Fiche (recette, cocktail) : pas de case à droite, un peu plus de marge */
+.carte.fiche,
+#liste .carte.fiche { padding-right: 16px; }
+/* …sauf si l'icône lien (44 px) est au bout */
+.carte.fiche:has(.carte-lien),
+#liste .carte.fiche:has(.carte-lien) { padding-right: 8px; }
+
+/* Partie gauche de la carte : un grand bouton (ouvre le panneau d'actions) */
+.carte-corps {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--texte);
+  font: inherit;
+  text-align: left;
+}
+.carte-textes { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.carte-titre { font-weight: 700; font-size: 16px; word-break: break-word; }
+.carte-details { font-size: 13px; color: var(--gris); }
+.carte-date { font-size: 12px; font-weight: 600; color: var(--bleu); }
+
+/* Vignette : l'affiche, ou un dégradé marine → bleu avec l'icône orange du type.
+   44 × 62 (accueil, réglages) ; 56 × 80 sur une page catégorie */
+.vignette {
+  width: 44px;
+  height: 62px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  object-fit: cover;
+  background: linear-gradient(160deg, var(--texte), var(--bleu));
+}
+#liste .vignette { width: 56px; height: 80px; border-radius: 20px; }
+.vignette-vide {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-survol);
+}
+.vignette-vide .icone-svg { width: 24px; height: 24px; }
+
+/* Case ronde de 26 px à droite. La vraie case à cocher est invisible
+   et couvre toute la zone de 44 px ; le rond est dessiné à côté. */
+.case-ronde {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.case-ronde input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.rond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--bleu);
+  background: rgba(255, 255, 255, 0.8);
+  transition: background-color 150ms ease-out, transform 150ms var(--courbe);
+}
+.rond .coche {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: white;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0;
+  transform: scale(0.4);
+  transition: opacity 150ms ease-out, transform 200ms var(--courbe);
+}
+/* Cocher : le rond se remplit de bleu et la coche grandit */
+.case-ronde input:checked + .rond { background: var(--bleu); }
+.case-ronde input:checked + .rond .coche { opacity: 1; transform: none; }
+.case-ronde:active .rond { transform: scale(0.88); }
+.case-ronde input:focus-visible + .rond { outline: 3px solid var(--bleu); outline-offset: 2px; }
+
+/* Carte qui s'en va (cochée ou décochée) : fondu en glissant un peu à droite.
+   Les autres cartes remontent ensuite en glissant (géré par app.js). */
+.carte.sortie {
+  animation: sortir 220ms var(--courbe) forwards;
+  pointer-events: none;
+}
+@keyframes sortir { to { opacity: 0; transform: translateX(24px) scale(0.97); } }
+
+/* Élément terminé : titre barré et grisé, vignette pâlie */
+.carte.fait .carte-titre { text-decoration: line-through; color: var(--gris); }
+.carte.fait .vignette { opacity: 0.5; }
+
+.aide { color: var(--gris); }
+.aide.vide { text-align: center; padding: 16px 0; }
+
+/* Apparition des carrés et des cartes en arrivant sur une page :
+   fondu + montée de 16 px, 220 ms, 40 ms d'écart entre deux cartes.
+   (« backwards » : une fois finie, l'animation ne bloque plus l'effet d'appui) */
+.apparition {
+  animation: apparaitre-bas 220ms ease-out backwards;
+  animation-delay: calc(var(--rang, 0) * 40ms);
+}
+@keyframes apparaitre-bas { from { opacity: 0; transform: translateY(16px); } }
+
+/* ---------- Barre du bas (flottante, sur toutes les pages) ---------- */
+/* Accueil, Recettes | + | Cocktails, Notes : 5 colonnes, le + au centre.
+   Icônes seules (le nom est dans aria-label). */
+.barre-bas {
+  position: fixed;
+  left: calc(16px + env(safe-area-inset-left));
+  right: calc(16px + env(safe-area-inset-right));
+  bottom: var(--bas-barre);
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr) auto repeat(2, 1fr);
+  align-items: center;
+  justify-items: center;
+  max-width: 568px;
+  height: 72px;
+  margin: 0 auto;
+  padding: 0 8px;
+  border-radius: 36px;
+  background: rgba(255, 255, 255, 0.78);
+  border: var(--verre-bord);
+  box-shadow: 0 10px 28px rgba(10, 35, 66, 0.14);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+/* Bouton catégorie : 44 × 48, icône 24 px grise */
+.onglet {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 48px;
+  padding: 0;
+  border: none;
+  border-radius: 24px;
+  background: transparent;
+  color: var(--gris);
+}
+.onglet-icone { display: flex; }
+.onglet-icone .icone-svg { width: 24px; height: 24px; }
+/* Catégorie affichée : fond bleu pâle, icône bleue */
+.onglet.actif { background: rgba(44, 110, 154, 0.15); color: var(--bleu); }
+
+/* Bouton Accueil : se démarque, toujours le même style (actif ou non) :
+   rond 48 px, dégradé bleu, icône blanche, liseré blanc, ombre bleue */
+.bouton-accueil {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 2px solid white;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #3f86b5, #2c6e9a);
+  color: white;
+  box-shadow: 0 8px 18px rgba(44, 110, 154, 0.45);
+}
+.bouton-accueil .icone-svg { width: 24px; height: 24px; }
+
+/* Bouton + : rond 56 px, dégradé orange, icône marine, ombre orange */
+.bouton-plus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #ff9b54, #ff6a00);
+  color: var(--texte);
+  box-shadow: 0 8px 18px rgba(255, 106, 0, 0.35);
+}
+.bouton-plus .icone-svg { width: 28px; height: 28px; stroke-width: 2.5; }
+
+/* ---------- Menu des catégories (bouton + de l'accueil) ---------- */
+/* Le <dialog> couvre tout l'écran, transparent : seul le voile se voit */
+.menu-categories {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+}
+/* À l'ouverture, c'est la carte du menu qui reçoit le focus (autofocus) et
+   non le premier bouton : pas de contour sur « Film ». Le menu lui-même
+   n'en affiche pas non plus. */
+.menu-categories:focus,
+.menu-carte:focus,
+/* Même chose pour les pages plein écran (fiche, Notes, Photos et texte) :
+   c'est leur contenu qui reçoit le focus, sans contour */
+.fiche-contenu:focus { outline: none; }
+.menu-categories::backdrop { background: var(--voile); }
+.menu-categories[open]::backdrop { animation: fondu 200ms ease-out; }
+
+/* Carte en verre centrée juste au-dessus de la barre : 5 choix en ligne */
+.menu-carte {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--bas-barre) + 72px + 14px);
+  display: flex;
+  gap: 4px;
+  width: max-content;
+  margin: 0 auto;
+  padding: 12px;
+  border-radius: 30px;
+  background: rgba(255, 255, 255, 0.85);
+}
+.menu-categories[open] .menu-carte { animation: apparaitre-bas 220ms ease-out backwards; }
+.choix-menu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 60px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--texte);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+.rond-menu {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: white;
+  color: var(--bleu);
+  box-shadow: 0 4px 12px rgba(10, 35, 66, 0.12);
+}
+.rond-menu .icone-svg { width: 26px; height: 26px; }
+/* Les choix apparaissent l'un après l'autre (40 ms d'écart, 200 ms chacun) */
+.menu-categories[open] .choix-menu { animation: surgir 200ms ease-out backwards; }
+.menu-categories[open] .choix-menu:nth-child(1) { animation-delay: 40ms; }
+.menu-categories[open] .choix-menu:nth-child(2) { animation-delay: 80ms; }
+.menu-categories[open] .choix-menu:nth-child(3) { animation-delay: 120ms; }
+.menu-categories[open] .choix-menu:nth-child(4) { animation-delay: 160ms; }
+.menu-categories[open] .choix-menu:nth-child(5) { animation-delay: 200ms; }
+@keyframes surgir { from { opacity: 0; transform: translateY(12px); } }
+
+/* Copie du bouton + posée exactement sur celui de la barre (au-dessus du
+   voile) : elle pivote de 45° et devient une croix de fermeture */
+#menu-fermer {
+  position: fixed;
+  left: calc(50% - 28px);
+  bottom: calc(var(--bas-barre) + 8px);
+}
+.bouton-croix .icone-svg { transform: rotate(45deg); }
+.menu-categories[open] .bouton-croix .icone-svg { animation: pivoter 200ms ease-out; }
+@keyframes pivoter { from { transform: rotate(0deg); } }
+
+/* ---------- Panneaux (Réglages en haut, actions en bas) ---------- */
+/* <dialog> : la fenêtre ; le voile sombre derrière = ::backdrop */
+.panneau {
+  width: 100%;
+  max-width: 600px;
+  /* --visible-ecran : hauteur visible, clavier de l'iPhone compris (app.js) */
+  max-height: min(85vh, calc(var(--visible-ecran, 100vh) - 8px));
+  padding: 0;
+  border: var(--verre-bord);
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 10px 30px rgba(10, 35, 66, 0.16);
+  color: var(--texte);
+  overflow-y: auto;
+}
+.panneau::backdrop { background: var(--voile); }
+.panneau-contenu { padding: 12px 16px 16px; }
+
+/* Panneau Réglages : collé en haut, coins du bas arrondis */
+.panneau-haut { margin: 0 auto auto; border-radius: 0 0 30px 30px; }
+.panneau-haut .panneau-contenu { padding-top: calc(env(safe-area-inset-top) + 12px); }
+
+/* Panneau d'actions : collé en bas, coins du haut arrondis */
+/* --clavier-ecran : hauteur du clavier de l'iPhone (app.js) ; le panneau
+   reste posé juste au-dessus quand on modifie une fiche */
+.panneau-bas { margin: auto auto var(--clavier-ecran, 0px); border-radius: 30px 30px 0 0; }
+.panneau-bas .panneau-contenu { padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
+
+/* Animations d'ouverture : descend du haut / monte du bas avec un léger
+   fondu, voile en fondu. Seulement transform et opacity : c'est fluide. */
+.panneau-haut[open] { animation: descendre 260ms var(--courbe); }
+.panneau-bas[open] { animation: monter 260ms var(--courbe); }
+.panneau[open]::backdrop { animation: fondu 220ms ease-out; }
+@keyframes descendre { from { transform: translateY(-100%); opacity: 0.4; } }
+@keyframes monter { from { transform: translateY(100%); opacity: 0.4; } }
+@keyframes fondu { from { opacity: 0; } }
+
+/* Lignes du menu Réglages : apparaissent l'une après l'autre (50 ms d'écart),
+   une fois que le panneau est presque descendu */
+.panneau-haut[open] #vue-menu .ligne-reglage { animation: apparaitre 220ms var(--courbe) backwards; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(1) { animation-delay: 120ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(2) { animation-delay: 170ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(3) { animation-delay: 220ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(4) { animation-delay: 270ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(5) { animation-delay: 270ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(6) { animation-delay: 270ms; }
+.panneau-haut[open] #vue-menu .ligne-reglage:nth-child(n+7) { animation-delay: 270ms; }
+@keyframes apparaitre { from { opacity: 0; transform: translateY(-8px); } }
+
+/* Boutons ronds des panneaux (retour, fermer) : 44 px, bleu pâle */
+.bouton-rond {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bleu-pale);
+  color: var(--texte);
+}
+
+/* En-tête du panneau Réglages : retour | titre | fermer */
+.panneau-entete {
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+#reglages-retour { grid-column: 1; }
+.reglages-titres { grid-column: 2; text-align: center; }
+#reglages-titre { margin: 0; font-size: 1.15rem; }
+/* Numéro de version : petit, gris, sous le titre « Réglages » */
+.version {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--gris);
+}
+#reglages-fermer { grid-column: 3; }
+
+/* Lignes du menu Réglages : tuiles arrondies de 60 px, icône, titre, badge, flèche */
+.ligne-reglage {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 12px 8px 10px;
+  margin-bottom: 8px;
+  border: var(--verre-bord);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+}
+.ligne-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bleu-pale);
+  color: var(--bleu);
+}
+.ligne-textes { display: flex; flex-direction: column; flex: 1; }
+.ligne-titre { font-weight: 600; }
+.ligne-sous-titre { font-size: 13px; color: var(--gris); }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 13px;
+  background: var(--bleu);
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+}
+.chevron { width: 18px; height: 18px; color: var(--gris); }
+
+/* Listes dans les panneaux : cartes blanches, sans ombre */
+.panneau .carte { background: rgba(255, 255, 255, 0.75); box-shadow: none; }
+.panneau .mentions { margin-top: 14px; }
+
+/* Panneau d'actions : titre de l'élément puis grands boutons */
+#actions-titre {
+  margin: 4px 0 14px;
+  text-align: center;
+  font-size: 1.05rem;
+  word-break: break-word;
+}
+.boutons-actions { display: flex; flex-direction: column; gap: 8px; }
+.bouton-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 26px;
+  background: var(--bleu-pale);
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.bouton-action.supprimer { color: var(--rouge); }
+/* Premier appui sur « Supprimer » : rouge plein, il faut confirmer */
+.bouton-action.supprimer.confirmer { background: var(--rouge); color: white; }
+
+/* Modification dans le panneau : étiquette + champ */
+form.edition { display: flex; flex-direction: column; gap: 6px; }
+.etiquette { font-size: 13px; color: var(--gris); font-weight: 600; }
+form.edition input,
+form.edition select {
+  font-size: 16px; /* 16px minimum : sinon l'iPhone zoome dans le champ */
+  min-height: 48px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid var(--bouton-bord);
+  background: var(--carte);
+  color: var(--texte);
+}
+form.edition .boutons-actions { margin-top: 10px; }
+
+/* ---------- Boutons : couleurs communes ---------- */
+/* Bouton principal (orange, texte marine) */
+.bouton-ajout-ligne,
+.bouton-action.principal,
+.boutons-fenetre #bouton-sauver-avant,
+.boutons-sauvegarde button[type="submit"] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--texte);
+  font-weight: 700;
+}
+
+/* Boutons secondaires (Annuler) : bleu, texte blanc */
+button.secondaire,
+.bouton-action.secondaire {
+  background: var(--bleu);
+  border-color: var(--bleu);
+  color: white;
+  font-weight: 600;
+}
+
+/* ---------- Retour visuel sur tous les boutons ---------- */
+button,
+.bouton-action,
+input[type="checkbox"] {
+  cursor: pointer;                          /* main sur ordinateur */
+  -webkit-tap-highlight-color: transparent; /* retire le flash gris d'iOS */
+}
+
+button,
+.bouton-action {
+  transition:
+    transform 150ms var(--courbe),
+    background-color var(--duree) ease-out,
+    border-color var(--duree) ease-out,
+    filter var(--duree) ease-out;
+}
+
+/* Survol à la souris (uniquement sur les appareils qui ont une souris) */
+@media (hover: hover) {
+  button:hover,
+  .bouton-action:hover { filter: brightness(0.96); }
+  /* Boutons orange : orange plus clair au survol */
+  .bouton-ajout-ligne:hover,
+  .bouton-action.principal:hover,
+  .boutons-fenetre #bouton-sauver-avant:hover,
+  .boutons-sauvegarde button[type="submit"]:hover {
+    background: var(--accent-survol);
+    border-color: var(--accent-survol);
+    filter: none;
+  }
+  .bouton-plus:hover { filter: brightness(1.05); }
+}
+
+/* Appui (doigt ou clic) : le bouton s'enfonce légèrement.
+   (Les cartes et les lignes de réglage s'enfoncent à peine, sinon ça bouge trop.) */
+button:active,
+.bouton-action:active {
+  transform: scale(0.96);
+  filter: brightness(0.94);
+}
+.carte-corps:active,
+.ligne-reglage:active { transform: scale(0.985); filter: brightness(0.97); }
+/* Boutons orange appuyés : orange plus clair */
+.bouton-ajout-ligne:active,
+.bouton-action.principal:active,
+.boutons-fenetre #bouton-sauver-avant:active,
+.boutons-sauvegarde button[type="submit"]:active {
+  background: var(--accent-survol);
+  border-color: var(--accent-survol);
+  filter: none;
+}
+.bouton-plus:active { filter: brightness(1.08); }
+
+/* Contour bien visible quand on navigue au clavier (touche Tab) */
+button:focus-visible,
+.bouton-action:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--bleu);
+  outline-offset: 2px;
+}
+
+/* ---------- Calque de saisie (monte du bas) ---------- */
+/* --clavier : hauteur cachée par le clavier de l'iPhone ; --visible : hauteur
+   de la partie d'écran visible (visualViewport). Les deux sont mesurées par
+   app.js : le calque est calé au bas de la partie visible et n'est jamais
+   plus haut qu'elle (moins la barre d'état en haut). */
+.feuille {
+  --hauteur-max: calc(var(--visible, 100vh) - env(safe-area-inset-top) - 8px);
+  margin: auto auto var(--clavier, 0px);
+  max-height: var(--hauteur-max);
+  border-radius: 32px 32px 0 0;
+  overflow: hidden;
+}
+/* Film, Série, Jeu : toute la hauteur visible, la liste remplit l'espace */
+.feuille.avec-recherche { height: var(--hauteur-max); }
+/* Clavier ouvert : pas de marge pour la barre du bas de l'iPhone (le clavier
+   la cache déjà), et pas de mention TMDB / IGDB (place gardée pour la liste) */
+.feuille.clavier-ouvert .feuille-contenu { padding-bottom: 8px; }
+.feuille.clavier-ouvert .mention-calque { display: none; }
+/* Page derrière le menu et le calque : ne défile pas */
+html.verrou,
+html.verrou body { overflow: hidden; }
+.feuille[open] {
+  display: flex;
+  flex-direction: column;
+  animation: monter 260ms var(--courbe);
+}
+.feuille-contenu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 12px 12px calc(env(safe-area-inset-bottom) + 12px);
+}
+
+/* En-tête de 44 px sur une ligne : retour | icône | titre | fermer */
+.feuille-entete {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  flex-shrink: 0;
+}
+.feuille-icone { display: flex; color: var(--bleu); }
+.feuille-entete h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 1.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Ligne du champ : le champ prend la place, « Ajouter » à droite */
+.ligne-saisie {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-shrink: 0;
+}
+/* Champ : 48 px, contour bleu */
+#champ-titre {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 16px;
+  border: 2px solid var(--bleu);
+  border-radius: 24px;
+  background: var(--carte);
+  color: var(--texte);
+  font-size: 17px; /* 16px minimum : sinon l'iPhone zoome dans le champ */
+}
+#champ-titre::placeholder { color: var(--gris); }
+
+/* « Ajouter » (Recette) : orange, 48 px, texte marine */
+.bouton-ajout-ligne {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 24px;
+  font-size: 17px;
+}
+
+/* Film, Série, Jeu : la liste prend toute la place restante et défile */
+.feuille-defile {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 2px 2px 0;
+  overscroll-behavior: contain; /* arrivé au bout, la page derrière ne bouge pas */
+}
+.feuille .resultats { margin-top: 10px; }
+.feuille .resultats li { margin-bottom: 8px; }
+
+/* Dernière ligne : « Ajouter « titre » tel quel », contour bleu */
+.bouton-contour {
+  flex-shrink: 0;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 10px;
+  padding: 10px 16px;
+  border: 2px solid var(--bleu);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--bleu);
+  font-size: 15px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* « Données … fournies par TMDB / IGDB » : en petit, en bas de la liste */
+.mention-calque {
+  flex-shrink: 0;
+  margin: auto 0 0;
+  padding-top: 12px;
+  text-align: center;
+  font-size: 11px;
+  color: var(--gris);
+}
+
+/* ---------- Résultats de la recherche TMDB / IGDB ---------- */
+#etat-recherche { font-size: 14px; color: var(--gris); margin: 12px 4px 8px; }
+/* Petite indication sous le message (ex. : adresse du relais à renseigner) */
+#etat-recherche .indication { display: block; margin-top: 4px; font-size: 13px; }
+
+/* Chaque résultat est un grand bouton : affiche + titre + type/année + « Ajouter » */
+.resultat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 60px;
+  padding: 8px 10px 8px 8px;
+  border: var(--verre-bord);
+  border-radius: 26px;
+  background: rgba(233, 238, 245, 0.75);
+  color: var(--texte);
+  font-size: 16px;
+  text-align: left;
+}
+.resultat .vignette { width: 52px; height: 76px; border-radius: 18px; }
+.resultat .textes { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.resultat .titre { font-weight: 700; word-break: break-word; }
+.resultat .details { font-size: 13px; color: var(--gris); }
+/* « Ajouter » orange, texte marine (dessiné comme un bouton) */
+.pastille-ajouter {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--texte);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color var(--duree) ease-out;
+}
+.resultat:active .pastille-ajouter { background: var(--accent-survol); }
+@media (hover: hover) {
+  .resultat:hover .pastille-ajouter { background: var(--accent-survol); }
+}
+
+/* ---------- Sauvegarde et clés API (panneau Réglages) ---------- */
+.sauvegarde .aide { font-size: 14px; color: var(--gris); margin: 4px 0 12px; }
+
+.boutons-sauvegarde { display: flex; flex-wrap: wrap; gap: 8px; }
+
+/* Boutons secondaires (Exporter, Importer, Effacer la clé) : bleu, texte blanc */
+.boutons-sauvegarde button,
+.boutons-fenetre button {
+  flex: 1 1 140px;
+  min-height: 48px;
+  font-size: 16px;
+  padding: 12px;
+  border-radius: 24px;
+  border: 1px solid var(--bleu);
+  background: var(--bleu);
+  color: white;
+  font-weight: 600;
+}
+
+.message { font-size: 14px; padding: 10px 14px; border-radius: 18px; }
+.message.succes { background: #e3f5e8; color: #1e6b34; }
+.message.erreur { background: #fde8e8; color: #a8282c; }
+
+.champ-reglage {
+  width: 100%;
+  min-height: 48px;
+  font-size: 16px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  border-radius: 24px;
+  border: 1px solid var(--bouton-bord);
+  background: var(--carte);
+  color: var(--texte);
+}
+#vue-cles > .aide { margin: 16px 4px 0; font-size: 14px; }
+#formulaire-relais .etiquette,
+#formulaire-prenom .etiquette { display: block; margin: 0 4px 6px; }
+
+/* ---------- Fenêtre de confirmation de l'import ---------- */
+#fenetre-import {
+  width: min(420px, calc(100% - 32px));
+  border: var(--verre-bord);
+  border-radius: 30px;
+  padding: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: var(--texte);
+}
+#fenetre-import::backdrop { background: var(--voile); }
+#fenetre-import h2 { margin: 0 0 12px; font-size: 1.3rem; }
+#conseil-sauvegarde, #info-sauvegarde-faite { font-size: 14px; color: var(--gris); }
+
+.boutons-fenetre { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.boutons-fenetre .danger { background: var(--rouge); border-color: var(--rouge); color: white; }
+
+/* ---------- Recettes : lien et note ---------- */
+/* Dans le calque d'ajout : ligne « Lien », puis la note */
+.zone-recette { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; flex-shrink: 0; }
+.ligne-lien { display: flex; gap: 8px; }
+#champ-lien,
+#champ-note,
+form.edition textarea {
+  min-width: 0;
+  border: 1px solid var(--bouton-bord);
+  background: var(--carte);
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px; /* 16px minimum : sinon l'iPhone zoome dans le champ */
+}
+#champ-lien { flex: 1; height: 48px; padding: 0 16px; border-radius: 24px; }
+#champ-note,
+form.edition textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 22px;
+  resize: vertical;
+}
+#champ-lien::placeholder,
+#champ-note::placeholder { color: var(--gris); }
+.message-coller { margin: 0 4px; font-size: 13px; }
+/* « Importer depuis le lien » : contour bleu, sur toute la largeur */
+.bouton-importer-lien { margin-top: 0; }
+.bouton-importer-lien:disabled { opacity: 0.6; cursor: progress; }
+/* Étape suivante conseillée (après un import impossible) : le bouton passe en orange, texte marine */
+.bouton-contour.mise-en-avant {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--texte);
+  font-weight: 700;
+}
+.bouton-contour.mise-en-avant .icone-svg { color: var(--texte); }
+@media (hover: hover) {
+  .bouton-contour.mise-en-avant:hover { background: var(--accent-survol); border-color: var(--accent-survol); filter: none; }
+}
+.bouton-contour.mise-en-avant:active { background: var(--accent-survol); border-color: var(--accent-survol); }
+#message-import { margin: 0; }
+
+/* Sur la carte : icône lien de 44 px (zone d'appui), entre le texte et la case */
+.carte-lien {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  color: var(--bleu);
+  -webkit-tap-highlight-color: transparent;
+}
+.carte-lien .icone-svg { width: 20px; height: 20px; }
+.carte-lien:active { background: var(--bleu-pale); }
+
+/* Panneau d'actions : note de la recette sous le titre */
+.actions-note {
+  margin: -6px 4px 14px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--gris);
+  white-space: pre-line; /* garde les retours à la ligne de la note */
+  word-break: break-word;
+}
+.edition-recette { display: flex; flex-direction: column; gap: 6px; }
+form.edition .message { margin: 4px 0 0; }
+
+/* Modifier une fiche : portions et temps côte à côte */
+/* align-items: flex-end : les champs restent alignés même si une étiquette
+   passe sur deux lignes (« Préparation (min) » sur un petit écran) */
+.edition-colonnes { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px; }
+.edition-champ { display: flex; flex-direction: column; gap: 6px; flex: 1 1 90px; min-width: 0; }
+.edition-champ input { width: 100%; }
+
+/* ---------- Page d'une fiche (recette, cocktail) ---------- */
+/* <dialog> plein écran, qui défile ; derrière, le même fond dégradé que l'app */
+.fiche-page {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--texte);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.fiche-page::backdrop {
+  background:
+    radial-gradient(70vmax 60vmax at -10% -5%, rgba(44, 110, 154, 0.26), transparent 60%),
+    radial-gradient(60vmax 55vmax at 110% 50%, rgba(255, 155, 84, 0.24), transparent 60%),
+    linear-gradient(170deg, #eef3fa, #dde8f5 55%, #e6ecf6);
+}
+/* Arrivée : glisse un peu depuis la droite avec un fondu */
+.fiche-page[open] { animation: arriver-droite 260ms var(--courbe); }
+@keyframes arriver-droite { from { opacity: 0; transform: translateX(28px); } }
+
+.fiche-contenu {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 0 16px calc(env(safe-area-inset-bottom) + 28px);
+}
+/* Bouton retour : reste en haut quand on fait défiler (verre flouté) */
+.fiche-haut {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: max(12px, calc(env(safe-area-inset-top) + 6px)) 0 10px;
+  pointer-events: none; /* seul le bouton capte les appuis */
+}
+.fiche-retour {
+  pointer-events: auto;
+  background: rgba(255, 255, 255, 0.85);
+  border: var(--verre-bord);
+  box-shadow: var(--verre-ombre);
+  color: var(--bleu);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+
+/* Photos : grande, 4:3, coins de 28 px, défilement horizontal qui « cale »
+   chaque photo ; fond de repli (dégradé + icône) sous chaque photo */
+.fiche-photos {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  border-radius: 28px;
+  box-shadow: var(--verre-ombre);
+  scrollbar-width: none;
+}
+.fiche-photos::-webkit-scrollbar { display: none; }
+.fiche-photo {
+  position: relative;
+  flex: 0 0 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 28px;
+  overflow: hidden;
+  scroll-snap-align: center;
+  background: linear-gradient(160deg, var(--texte), var(--bleu));
+  color: var(--accent-survol);
+}
+.fiche-photo .icone-svg { width: 48px; height: 48px; stroke-width: 1.5; }
+/* La photo est toujours visible en entier (contain), centrée ; derrière,
+   la même photo remplit le cadre (cover), floutée, un peu assombrie et
+   agrandie (scale 1.1) pour que ses bords flous ne se voient pas.
+   Le cadre garde sa taille (4:3) et ses coins arrondis (overflow: hidden). */
+.fiche-photo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+.fiche-photo .fiche-photo-fond {
+  object-fit: cover;
+  filter: blur(20px) brightness(0.8);
+  transform: scale(1.1);
+}
+/* Points sous les photos : celui de la photo visible est orange et allongé */
+.fiche-points { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+.fiche-point {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(10, 35, 66, 0.22);
+  transition: width var(--duree) var(--courbe), background-color var(--duree) ease-out;
+}
+.fiche-point.actif { width: 20px; background: var(--accent); }
+
+/* En-tête : carte en verre, titre en grand, pastilles d'infos */
+.fiche-entete { margin-top: 14px; padding: 18px; border-radius: 30px; }
+.fiche-type { margin: 0; font-size: 13px; font-weight: 600; color: var(--bleu); }
+#fiche-titre {
+  margin: 2px 0 0;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  word-break: break-word;
+}
+.fiche-infos { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 14px 0 0; }
+.fiche-infos li {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: var(--bleu-pale);
+}
+.fiche-infos span { font-size: 11px; color: var(--gris); }
+.fiche-infos strong { font-size: 15px; word-break: break-word; }
+.fiche-note {
+  margin: 12px 0 0;
+  font-size: 14px;
+  color: var(--gris);
+  white-space: pre-line; /* garde les retours à la ligne de la note */
+  word-break: break-word;
+}
+/* « Voir la source ↗ » : bouton bleu, texte blanc */
+.fiche-source {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 18px;
+  border-radius: 22px;
+  background: var(--bleu);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* Blocs Ingrédients et Étapes */
+.fiche-bloc { margin-top: 16px; padding: 16px; border-radius: 30px; }
+.fiche-bloc h3,
+.fiche-titre-bloc { margin: 0 0 12px; font-size: 19px; font-weight: 800; }
+.fiche-titre-bloc { margin: 24px 4px 12px; }
+
+/* Sélecteur « − Pour 4 personnes + » */
+.portions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.75);
+  border: var(--verre-bord);
+}
+#portions-texte { flex: 1; margin: 0; text-align: center; font-weight: 700; font-size: 16px; }
+.bouton-portions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: var(--bleu);
+  color: white;
+}
+.bouton-portions .icone-svg { stroke-width: 2.5; }
+.bouton-portions:disabled { opacity: 0.35; cursor: default; }
+.portions-aide { margin: 8px 4px 0; font-size: 13px; }
+/* « Rétablir » : texte bleu souligné, zone d'appui de 44 px */
+.bouton-retablir {
+  min-height: 44px;
+  margin-top: 4px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--bleu);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-align: left;
+}
+.fiche-ingredients { list-style: none; padding: 0; margin: 8px 0 0; }
+.fiche-ingredients li {
+  padding: 11px 4px;
+  border-bottom: 1px solid rgba(10, 35, 66, 0.08);
+  font-size: 16px;
+  word-break: break-word;
+}
+.fiche-ingredients li:last-child { border-bottom: none; }
+.fiche-ingredients strong { color: var(--bleu); }
+
+/* Étapes : une carte verre (rayon 24 px) par étape, pastille numérotée */
+.fiche-etapes { list-style: none; padding: 0; margin: 0; }
+.fiche-etape {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+  border-radius: 24px;
+}
+.fiche-numero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bleu);
+  color: white;
+  font-size: 15px;
+  font-weight: 800;
+}
+.fiche-etape p { margin: 5px 0 0; font-size: 16px; line-height: 1.45; word-break: break-word; }
+/* Titre de partie (« La pâte ») entre deux étapes */
+.fiche-section { margin: 18px 6px 10px; font-size: 16px; font-weight: 800; color: var(--bleu); }
+.fiche-section:first-child { margin-top: 0; }
+
+.fiche-boutons { margin-top: 24px; }
+/* « Changer la photo » / « Retirer la photo » : côte à côte */
+.fiche-boutons-photo { display: flex; gap: 8px; margin-top: 24px; }
+.fiche-boutons-photo .bouton-action { flex: 1; }
+.fiche-boutons-photo .bouton-action:disabled { opacity: 0.6; cursor: progress; }
+#fiche-message-photo { margin: 10px 0 0; }
+.fiche-boutons-photo + input + #fiche-message-photo[hidden] + .fiche-boutons { margin-top: 8px; }
+
+/* Écran « Photos et texte » : photo de la fiche (une seule, non envoyée) */
+.ia-aide-vignette { margin: -4px 0 12px; font-size: 14px; }
+.ia-vignette { width: calc((100% - 20px) / 3); margin-bottom: 4px; }
+#ia-message-vignette { margin: 10px 0 0; }
+/* Brouillon : rappel de la photo de la fiche choisie */
+.ia-rappel-vignette { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+.ia-rappel-vignette img {
+  width: 64px;
+  height: 64px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+/* ---------- Ajout avec l'IA : photos et texte (Gemini) ---------- */
+/* Bouton du calque d'ajout : icône appareil photo + texte */
+.bouton-ouvrir-ia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 0;
+}
+.bouton-ouvrir-ia .icone-svg { width: 20px; height: 20px; }
+
+/* En-tête : bouton fermer + titre dans une pastille en verre */
+.ia-haut { display: flex; align-items: center; gap: 10px; }
+.ia-titre {
+  pointer-events: auto;
+  margin: 0;
+  padding: 10px 18px;
+  border-radius: 24px;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.page-ia .fiche-bloc h3 { display: flex; align-items: baseline; gap: 8px; }
+.ia-compte { font-size: 13px; font-weight: 600; color: var(--gris); }
+
+/* Miniatures : 3 par ligne, carrées, coins arrondis, ✕ en haut à droite */
+.ia-miniatures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 4px;
+}
+.ia-miniature {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 20px;
+  overflow: hidden;
+  background: linear-gradient(160deg, var(--texte), var(--bleu));
+  box-shadow: var(--verre-ombre);
+  animation: miniature-arrive 200ms var(--courbe);
+}
+@keyframes miniature-arrive { from { opacity: 0; transform: scale(0.92); } }
+.ia-miniature img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Zone d'appui de 44 px, rond visible de 30 px */
+.ia-retirer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+}
+.ia-retirer::before {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  z-index: -1;
+  border-radius: 50%;
+  background: rgba(10, 35, 66, 0.7);
+}
+.ia-retirer { isolation: isolate; }
+.page-ia #ia-ajouter-photo:disabled { opacity: 0.6; cursor: progress; }
+#ia-message-photos { margin: 10px 0 0; }
+
+/* Texte collé et lien */
+.ia-champs { display: flex; flex-direction: column; gap: 8px; }
+.ia-champs h3 { margin-bottom: 4px; }
+#ia-texte,
+#ia-lien {
+  width: 100%;
+  border: 1px solid var(--bouton-bord);
+  background: var(--carte);
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px; /* 16px minimum : sinon l'iPhone zoome dans le champ */
+}
+#ia-texte { padding: 12px 16px; border-radius: 22px; resize: vertical; }
+#ia-lien { min-height: 48px; padding: 0 16px; border-radius: 24px; }
+#ia-texte::placeholder,
+#ia-lien::placeholder { color: var(--gris); }
+
+/* Note « envoyés à Google » : toujours visible au-dessus du bouton */
+.ia-avis {
+  margin: 16px 6px 10px;
+  font-size: 13px;
+  color: var(--gris);
+  text-align: center;
+}
+/* Gros bouton orange « Analyser avec l'IA » */
+.ia-gros { min-height: 60px; font-size: 18px; border-radius: 30px; }
+.bouton-action.principal:disabled { opacity: 0.45; cursor: default; filter: none; transform: none; }
+#ia-message { margin: 10px 0 0; }
+
+/* Pendant l'appel : roue qui tourne, texte, « Annuler » */
+.ia-chargement {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 28px 18px 18px;
+  border-radius: 30px;
+  text-align: center;
+}
+.ia-chargement p { margin: 0; font-weight: 700; }
+.ia-roue {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 4px solid var(--bleu-pale);
+  border-top-color: var(--accent);
+  animation: tourner 900ms linear infinite;
+}
+@keyframes tourner { to { transform: rotate(360deg); } }
+
+/* Brouillon */
+.ia-brouillon { gap: 0; }
+.ia-brouillon .fiche-bloc { margin-top: 12px; }
+.ia-brouillon textarea { min-height: 96px; }
+.ia-aide-brouillon { margin: 10px 6px 0; font-size: 13px; }
+/* Bandeau orangé des avertissements (texte marine) */
+.ia-avertissements {
+  margin-top: 4px;
+  padding: 14px 16px;
+  border-radius: 24px;
+  background: #ffe6d3;
+  border: 1px solid var(--accent-survol);
+  color: var(--texte);
+  font-size: 14px;
+}
+.ia-avertissements ul { margin: 6px 0 0; padding-left: 20px; }
+.ia-avertissements li + li { margin-top: 4px; }
+
+/* Case « Garder une photo » (44 px de haut) */
+form.edition .ia-case input,
+form.edition .ia-photo-choix input {
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.ia-case {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.ia-case input { width: 24px; height: 24px; flex-shrink: 0; accent-color: var(--bleu); }
+/* Choix de la photo à garder : miniatures avec bouton radio caché */
+.ia-choix-photo { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+.ia-photo-choix {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  overflow: hidden;
+  cursor: pointer;
+  outline: 3px solid transparent;
+  outline-offset: 2px;
+  transition: outline-color var(--duree) ease-out;
+}
+.ia-photo-choix input { position: absolute; opacity: 0; pointer-events: none; }
+.ia-photo-choix img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ia-photo-choix:has(input:checked) { outline-color: var(--accent); }
+.ia-photo-choix:has(input:focus-visible) { outline-color: var(--bleu); }
+#ia-message-brouillon { margin: 12px 0 0; }
+.ia-boutons { margin-top: 16px; }
+.ia-boutons .bouton-contour { margin-top: 0; min-height: 52px; border-radius: 26px; font-size: 16px; }
+
+/* ---------- Page Notes (Réglages → Notes), façon Rappels ---------- */
+/* Même fond dégradé que les fiches ; arrivée en fondu léger */
+.page-notes[open] { animation: fondu 220ms ease-out; }
+.notes-contenu {
+  /* place sous la dernière ligne pour qu'elle reste au-dessus du clavier */
+  padding-bottom: calc(var(--clavier-ecran, 0px) + env(safe-area-inset-bottom) + 48px);
+}
+
+/* Barre du haut : ‹ à gauche, … à droite (boutons ronds en verre, 48 px) */
+.notes-barre {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  padding: max(12px, calc(env(safe-area-inset-top) + 6px)) 0 6px;
+}
+.bouton-verre-rond {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: var(--verre-bord);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: var(--verre-ombre);
+  color: var(--bleu);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+}
+.bouton-verre-rond .icone-svg { width: 24px; height: 24px; stroke-width: 2.4; }
+.icone-plein { fill: currentColor; stroke: none; }
+
+/* Menu « … » : petite carte en verre sous le bouton */
+.notes-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 260px;
+  padding: 6px;
+  border-radius: 22px;
+  animation: fondu 180ms ease-out;
+}
+.notes-menu button {
+  min-height: 48px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 16px;
+  background: none;
+  color: var(--texte);
+  font: inherit;
+  font-size: 16px;
+  text-align: left;
+}
+.notes-menu button + button { border-top: 1px solid rgba(10, 35, 66, 0.08); border-radius: 0 0 16px 16px; }
+.notes-menu .notes-menu-rouge { color: var(--rouge); }
+.notes-menu button:disabled { opacity: 0.4; cursor: default; }
+
+/* Titre « Notes » en grand */
+.notes-titre {
+  margin: 6px 4px 10px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: var(--texte);
+}
+/* « Copié », « Note supprimée »… : petite pastille qui disparaît seule */
+.notes-annonce {
+  display: inline-block;
+  margin: 0 4px 8px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  background: var(--bleu);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  animation: fondu 180ms ease-out;
+}
+
+/* Lignes : pas de carte ni de bordure, seulement un trait très fin
+   sous le texte (comme Rappels) */
+.notes-liste { list-style: none; padding: 0; margin: 0; }
+.note { position: relative; overflow: hidden; }
+.note::after {
+  content: "";
+  position: absolute;
+  left: 44px;
+  right: 0;
+  bottom: 0;
+  height: 1px;
+  background: rgba(10, 35, 66, 0.08);
+}
+.note-glisse {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 11px 4px 11px 2px;
+  touch-action: pan-y; /* le défilement vertical reste au navigateur */
+  transition: transform 220ms var(--courbe);
+}
+.note-glisse.en-glissement { transition: none; }
+
+/* Cercle de 28 px (zone d'appui de 44 px autour) */
+.note-cercle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  margin-top: -1px;
+  padding: 0;
+  border: 2px solid #8fa3ba;
+  border-radius: 50%;
+  background: transparent;
+  transition: background-color 180ms ease-out, border-color 180ms ease-out;
+}
+.note-cercle::after { content: ""; position: absolute; inset: -8px; }
+.note-crochet {
+  width: 18px;
+  height: 18px;
+  stroke: white;
+  stroke-width: 3;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: opacity 180ms ease-out, transform 220ms var(--courbe);
+}
+.note.fait .note-cercle { background: var(--bleu); border-color: var(--bleu); }
+.note.fait .note-crochet { opacity: 1; transform: none; }
+/* Ligne d'ajout : cercle en pointillés */
+.note-cercle-ajout { border-style: dashed; }
+
+/* Texte : 18 px, marine, sur plusieurs lignes si besoin ; le champ est
+   invisible (pas de bordure ni de fond) */
+.note-texte {
+  flex: 1;
+  min-width: 0;
+  min-height: 25px;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--texte);
+  font: inherit;
+  font-size: 18px; /* au moins 16 px : sinon l'iPhone zoome dans le champ */
+  line-height: 1.4;
+  resize: none;
+  overflow: hidden;
+  word-break: break-word;
+}
+.note-texte::placeholder { color: #8fa3ba; }
+.note.fait .note-texte {
+  color: var(--gris);
+  text-decoration: line-through;
+  text-decoration-color: rgba(74, 93, 120, 0.6);
+}
+
+/* « Supprimer » rouge derrière la ligne, révélé en glissant vers la gauche */
+.note-supprimer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+  background: var(--rouge);
+  color: white;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  visibility: hidden;
+  transition: width 220ms var(--courbe);
+}
+.note.en-glissement .note-supprimer { transition: none; }
+.note.en-glissement .note-supprimer,
+.note.ouverte .note-supprimer { visibility: visible; }
+.note.ouverte .note-supprimer { width: 96px; }
+
+/* Ordinateur (souris) : petit bouton ✕ discret au survol de la ligne */
+.note-supprimer-survol {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  margin-top: -3px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--gris);
+}
+.note-supprimer-survol .icone-svg { width: 16px; height: 16px; }
+@media (hover: hover) and (pointer: fine) {
+  .note-supprimer-survol { display: flex; opacity: 0; transition: opacity 150ms ease-out; }
+  .note:hover .note-supprimer-survol,
+  .note-supprimer-survol:focus-visible { opacity: 1; }
+  .note-supprimer-survol:hover { color: var(--rouge); background: rgba(180, 35, 24, 0.08); }
+}
+
+.notes-vide { margin: 14px 4px 0 46px; font-size: 14px; color: var(--gris); }
+
+/* « Terminées (N) » : repliée par défaut, texte gris */
+.notes-bloc-faites { margin-top: 22px; }
+.notes-bascule {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: var(--gris);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+}
+.notes-chevron { width: 18px; height: 18px; transition: transform 200ms var(--courbe); }
+.notes-bascule[aria-expanded="true"] .notes-chevron { transform: rotate(90deg); }
+
+/* ---------- Mentions TMDB et IGDB ---------- */
+.mentions {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--gris);
+}
+.mentions img { display: inline-block; height: 16px; width: auto; }
+.mentions p { margin: 6px 0 0; }
+.mentions p a { color: inherit; text-decoration: underline; }
+
+/* ---------- Replis ---------- */
+/* Navigateur sans flou : verre presque opaque, pour rester lisible */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .verre-flou,
+  .barre-bas,
+  .panneau,
+  #fenetre-import { background: rgba(255, 255, 255, 0.95); }
+}
+/* « Réduire la transparence » activé sur l'iPhone (Accessibilité) :
+   plus de flou ni de transparence, tout devient blanc opaque */
+@media (prefers-reduced-transparency: reduce) {
+  .verre,
+  .verre-flou,
+  .carte,
+  .bouton-entete,
+  .barre-bas,
+  .panneau,
+  .menu-carte,
+  .fiche-retour,
+  .portions,
+  .bouton-verre-rond,
+  #fenetre-import {
+    background: white;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ---------- « Réduire les animations » activé sur l'appareil ---------- */
+/* Réglages iPhone > Accessibilité > Mouvement : on coupe toutes les animations */
+/* (app.js vérifie aussi ce réglage : la carte cochée disparaît alors d'un coup) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after, *::backdrop {
+    transition-duration: 0ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0ms !important;
+    animation-delay: 0ms !important;
+  }
+  button:active,
+  .bouton-action:active,
+  .carte-corps:active,
+  .ligne-reglage:active,
+  .case-ronde:active .rond { transform: none; }
+  /* La roue de chargement ne tourne plus : le texte « Analyse en cours… » suffit */
+  .ia-roue { animation: none; border-color: var(--accent); }
+}

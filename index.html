@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <!-- Adapte l'affichage à la largeur de l'écran du téléphone -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Toque&amp;Tonic</title>
+
+  <!-- Réglages pour l'iPhone quand l'app est ajoutée à l'écran d'accueil -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Toque&amp;Tonic">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <!-- Petite icône de l'onglet du navigateur -->
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+
+  <!-- Le "manifeste" décrit l'app (nom, icônes, couleurs) -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#e9eef5">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <!-- En-tête : logo W puis salutation (ou catégorie) à gauche,
+         bouton Réglages à droite (Accueil est dans la barre du bas) -->
+    <header class="entete">
+      <!-- Logo toque (icons/logo-toque.svg), à gauche des textes -->
+      <div class="titre-app">
+        <img class="logo" src="icons/logo-toque.svg" alt="Toque&amp;Tonic" width="40" height="34">
+      </div>
+      <div class="entete-textes">
+        <p id="entete-petit" class="entete-petit">Bonjour</p>
+        <h1 id="entete-grand" class="entete-grand">Womack</h1>
+      </div>
+      <div class="entete-boutons">
+        <button type="button" id="bouton-reglages" class="bouton-entete" aria-label="Réglages">
+          <!-- Roue dentée -->
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Page d'accueil -->
+    <section id="page-accueil">
+      <!-- 2 carrés : nombre de fiches (Recettes, Cocktails) ; un appui ouvre la page -->
+      <div class="carres">
+        <button type="button" class="carre verre" data-type="recette">
+          <span class="carre-pastille"></span><span class="carre-nombre">0</span><span class="carre-libelle">Recettes</span>
+        </button>
+        <button type="button" class="carre verre" data-type="cocktail">
+          <span class="carre-pastille"></span><span class="carre-nombre">0</span><span class="carre-libelle">Cocktails</span>
+        </button>
+      </div>
+
+      <h2 class="titre-section">Derniers ajoutés</h2>
+      <ul id="liste-recents" class="liste"></ul>
+      <p id="recents-vide" class="aide vide" hidden>Aucune fiche pour l'instant. Appuie sur + pour ajouter.</p>
+    </section>
+
+    <!-- Page d'une catégorie (Recettes ou Cocktails) -->
+    <section id="page-categorie" hidden>
+      <ul id="liste" class="liste"></ul>
+      <p id="message-vide" class="aide vide" hidden></p>
+
+    </section>
+  </main>
+
+  <!-- Barre du bas, flottante, sur toutes les pages, icônes seules :
+       Accueil, Recettes | bouton + | Cocktails, Notes -->
+  <nav class="barre-bas" aria-label="Navigation">
+    <button type="button" id="bouton-accueil" class="bouton-accueil" aria-label="Accueil">
+      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M3.5 11 12 3.8l8.5 7.2 M5.5 9.5V20h4.8v-5.5h3.4V20h4.8V9.5"/></svg>
+    </button>
+    <button type="button" class="onglet" data-type="recette" aria-label="Recettes"><span class="onglet-icone"></span></button>
+    <!-- Accueil : ouvre le menu des catégories. Page catégorie : ouvre la saisie -->
+    <button type="button" id="bouton-ajouter" class="bouton-plus" aria-label="Ajouter un élément">
+      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <button type="button" class="onglet" data-type="cocktail" aria-label="Cocktails"><span class="onglet-icone"></span></button>
+    <!-- Notes : ouvre la page Notes (la même que Réglages → Notes) -->
+    <button type="button" id="onglet-notes" class="onglet" aria-label="Notes">
+      <span class="onglet-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M9 8h6 M9 12h6 M9 16h3"/></svg></span>
+    </button>
+  </nav>
+
+  <!-- Panneau Réglages : descend du haut, sur un voile sombre.
+       <dialog> est une balise HTML pour les fenêtres par-dessus la page. -->
+  <dialog id="panneau-reglages" class="panneau panneau-haut" aria-labelledby="reglages-titre">
+    <div class="panneau-contenu">
+      <div class="panneau-entete">
+        <button type="button" id="reglages-retour" class="bouton-rond" aria-label="Retour" hidden>
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <!-- Titre, avec le numéro de version de l'app juste en dessous -->
+        <div class="reglages-titres">
+          <h2 id="reglages-titre">Réglages</h2>
+          <span id="version" class="version"></span>
+        </div>
+        <button type="button" id="reglages-fermer" class="bouton-rond" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <!-- Menu : une ligne par rubrique -->
+      <div id="vue-menu">
+        <!-- Prénom affiché sur l'accueil (« Bonjour … ») -->
+        <button type="button" class="ligne-reglage" data-vue="prenom">
+          <!-- Silhouette -->
+          <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></span>
+          <span class="ligne-textes">
+            <span class="ligne-titre">Prénom</span>
+            <span class="ligne-sous-titre">Affiché sur l'accueil (« Bonjour … »)</span>
+          </span>
+          <svg viewBox="0 0 24 24" class="icone-svg chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <!-- Notes : ouvre la page Notes (pas une vue du panneau), nombre de notes à faire -->
+        <button type="button" id="ligne-notes" class="ligne-reglage">
+          <!-- Bloc-notes -->
+          <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M7 3h10a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z M9 8h6 M9 12h6 M9 16h3"/></svg></span>
+          <span class="ligne-textes"><span class="ligne-titre">Notes</span></span>
+          <span id="badge-notes" class="badge" aria-label="notes à faire">0</span>
+          <svg viewBox="0 0 24 24" class="icone-svg chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button type="button" class="ligne-reglage" data-vue="sauvegarde">
+          <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></span>
+          <span class="ligne-textes">
+            <span class="ligne-titre">Sauvegarde</span>
+            <span class="ligne-sous-titre">Exporter ou importer ma liste</span>
+          </span>
+          <svg viewBox="0 0 24 24" class="icone-svg chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button type="button" class="ligne-reglage" data-vue="relais">
+          <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"/></svg></span>
+          <span class="ligne-textes">
+            <span class="ligne-titre">Relais</span>
+            <span class="ligne-sous-titre">Import de recettes depuis un lien</span>
+          </span>
+          <svg viewBox="0 0 24 24" class="icone-svg chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <button type="button" class="ligne-reglage" data-vue="gemini">
+          <!-- Étincelles -->
+          <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M10 3l1.8 5.2L17 10l-5.2 1.8L10 17l-1.8-5.2L3 10l5.2-1.8z M18 14l.9 2.1L21 17l-2.1.9L18 20l-.9-2.1L15 17l2.1-.9z"/></svg></span>
+          <span class="ligne-textes">
+            <span class="ligne-titre">IA (Gemini)</span>
+            <span class="ligne-sous-titre">Clé et modèle pour l'ajout par photos et texte</span>
+          </span>
+          <svg viewBox="0 0 24 24" class="icone-svg chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+
+      <!-- Prénom : gardé sur cet appareil, affiché sous « Bonjour » -->
+      <div id="vue-prenom" hidden>
+        <form id="formulaire-prenom" class="sauvegarde">
+          <p class="aide">
+            Le prénom affiché en haut de l'accueil, sous « Bonjour ».
+            Il est gardé dans la mémoire de cet appareil : à changer sur
+            chaque appareil (PC, iPhone).
+          </p>
+          <label for="champ-prenom" class="etiquette">Prénom</label>
+          <input id="champ-prenom" class="champ-reglage" type="text" maxlength="30"
+                 autocomplete="given-name" autocapitalize="words" spellcheck="false">
+          <div class="boutons-sauvegarde">
+            <button type="submit">Enregistrer</button>
+            <button type="button" id="bouton-effacer-prenom">Remettre « Womack »</button>
+          </div>
+          <p id="message-prenom" class="message" role="status" hidden></p>
+        </form>
+      </div>
+
+      <!-- Sauvegarde : exporter / importer toute la liste -->
+      <div id="vue-sauvegarde" class="sauvegarde" hidden>
+        <p class="aide">
+          Exporter crée un fichier avec toutes tes fiches (recettes, cocktails, photos) et tes notes.
+          Importer remplace toutes les fiches par celles d'un fichier exporté
+          (de Toque&amp;Tonic, ou de Wodo : seuls ses recettes, cocktails et notes sont repris).
+        </p>
+        <div class="boutons-sauvegarde">
+          <button type="button" id="bouton-exporter">📤 Exporter</button>
+          <button type="button" id="bouton-importer">📥 Importer</button>
+        </div>
+        <!-- Sélecteur de fichier caché : le bouton "Importer" l'ouvre -->
+        <input type="file" id="champ-fichier" accept=".json,application/json" hidden>
+        <!-- Message de réussite ou d'erreur -->
+        <p id="message-sauvegarde" class="message" role="status" hidden></p>
+      </div>
+
+      <!-- Relais Cloudflare (import de recettes) : adresse gardée sur cet appareil -->
+      <div id="vue-relais" hidden>
+        <form id="formulaire-relais" class="sauvegarde">
+          <p class="aide">
+            Adresse du relais qui permet d'importer une recette ou un cocktail
+            depuis un lien (le même relais que Wodo ; mode d'emploi dans le projet
+            Wodo : relais/LISEZMOI-RELAIS.md). Elle est gardée uniquement dans la mémoire
+            de cet appareil : jamais envoyée sur GitHub, jamais mise dans les exports.
+          </p>
+          <p id="etat-relais" class="aide"></p>
+          <label for="champ-relais" class="etiquette">Adresse du relais</label>
+          <input id="champ-relais" class="champ-reglage" type="url" inputmode="url" autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false"
+                 placeholder="https://mes-listes-relais.….workers.dev">
+          <div class="boutons-sauvegarde">
+            <button type="submit">Enregistrer</button>
+            <button type="button" id="bouton-effacer-relais">Effacer</button>
+          </div>
+          <p id="message-relais" class="message" role="status" hidden></p>
+        </form>
+      </div>
+
+      <!-- IA (Gemini) : clé (jamais réaffichée) et modèle, gardés sur cet appareil -->
+      <div id="vue-gemini" hidden>
+        <form id="formulaire-gemini" class="sauvegarde" novalidate>
+          <p class="aide">
+            Clé API Gemini, pour créer une recette ou un cocktail à partir de
+            photos et de texte (à créer sur aistudio.google.com, « Get API key »).
+            Elle est gardée uniquement dans la mémoire de cet appareil : jamais
+            envoyée sur GitHub, jamais mise dans les exports, jamais réaffichée.
+          </p>
+          <p id="etat-gemini" class="aide"></p>
+          <label for="champ-cle-gemini" class="etiquette">Clé Gemini</label>
+          <input id="champ-cle-gemini" class="champ-reglage" type="password" autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Colle ta clé Gemini ici">
+          <label for="champ-modele-gemini" class="etiquette">Modèle Gemini</label>
+          <input id="champ-modele-gemini" class="champ-reglage" type="text" autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false">
+          <p id="aide-modele-gemini" class="aide"></p>
+          <div class="boutons-sauvegarde">
+            <button type="submit" id="bouton-enregistrer-gemini">Enregistrer</button>
+            <button type="button" id="bouton-effacer-gemini">Effacer la clé</button>
+          </div>
+          <p id="message-gemini" class="message" role="status" hidden></p>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Panneau d'actions : monte du bas quand on touche une carte -->
+  <dialog id="panneau-actions" class="panneau panneau-bas" aria-labelledby="actions-titre">
+    <div class="panneau-contenu">
+      <h2 id="actions-titre"></h2>
+      <!-- Note d'une recette (s'il y en a une) -->
+      <p id="actions-note" class="actions-note" hidden></p>
+      <div id="actions-boutons" class="boutons-actions">
+        <a id="actions-lien" class="bouton-action" target="_blank" rel="noopener" hidden>Ouvrir le lien ↗</a>
+        <button type="button" id="actions-modifier" class="bouton-action">Modifier</button>
+        <button type="button" id="actions-supprimer" class="bouton-action supprimer">Supprimer</button>
+        <button type="button" id="actions-annuler" class="bouton-action secondaire">Annuler</button>
+      </div>
+      <!-- Modification : le titre et le type se changent ici -->
+      <form id="actions-edition" class="edition" hidden>
+        <label for="edition-titre" class="etiquette">Titre</label>
+        <input id="edition-titre" type="text" required>
+        <label for="edition-type" class="etiquette">Type</label>
+        <select id="edition-type"></select>
+        <!-- Recette et cocktail seulement : lien, note et contenu de la fiche -->
+        <div id="edition-recette" class="edition-recette" hidden>
+          <label for="edition-lien" class="etiquette">Lien (facultatif)</label>
+          <input id="edition-lien" type="url" inputmode="url" autocomplete="off"
+                 autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="https://…">
+          <label for="edition-note" class="etiquette">Note (facultatif)</label>
+          <textarea id="edition-note" rows="3" maxlength="1000"></textarea>
+
+          <div class="edition-colonnes">
+            <div class="edition-champ">
+              <label for="edition-portions" class="etiquette">Portions</label>
+              <input id="edition-portions" type="number" inputmode="numeric" min="1" max="100" placeholder="4">
+            </div>
+            <div class="edition-champ">
+              <label for="edition-preparation" class="etiquette">Préparation (min)</label>
+              <input id="edition-preparation" type="number" inputmode="numeric" min="1" max="10000">
+            </div>
+            <!-- Recette : cuisson -->
+            <div id="edition-champ-cuisson" class="edition-champ">
+              <label for="edition-cuisson" class="etiquette">Cuisson (min)</label>
+              <input id="edition-cuisson" type="number" inputmode="numeric" min="1" max="10000">
+            </div>
+          </div>
+          <!-- Cocktail : verre, méthode, alcool de base (avec suggestions) -->
+          <div id="edition-champs-cocktail" class="edition-recette">
+            <label for="edition-verre" class="etiquette">Verre</label>
+            <input id="edition-verre" type="text" maxlength="100" list="suggestions-verres" placeholder="Tumbler, coupe…">
+            <label for="edition-methode" class="etiquette">Méthode</label>
+            <input id="edition-methode" type="text" maxlength="100" list="suggestions-methodes" placeholder="Shaker, direct dans le verre…">
+            <label for="edition-alcool" class="etiquette">Alcool de base</label>
+            <input id="edition-alcool" type="text" maxlength="100" placeholder="Rhum, gin, vodka…">
+            <datalist id="suggestions-verres">
+              <option value="Tumbler"></option><option value="Old fashioned"></option>
+              <option value="Highball"></option><option value="Coupe"></option>
+              <option value="Verre à martini"></option><option value="Flûte"></option>
+              <option value="Verre à vin"></option><option value="Mug en cuivre"></option>
+            </datalist>
+            <datalist id="suggestions-methodes">
+              <option value="Shaker"></option><option value="Direct dans le verre"></option>
+              <option value="Verre à mélange"></option><option value="Blender"></option>
+            </datalist>
+          </div>
+          <label for="edition-ingredients" class="etiquette">Ingrédients (un par ligne)</label>
+          <textarea id="edition-ingredients" rows="5" placeholder="200 g de farine&#10;3 œufs"></textarea>
+          <label for="edition-etapes" class="etiquette">Étapes (une par ligne ; « # Titre » pour une partie)</label>
+          <textarea id="edition-etapes" rows="6" placeholder="# La pâte&#10;Mélanger la farine et les œufs.&#10;Laisser reposer 1 h."></textarea>
+        </div>
+        <p id="edition-erreur" class="message erreur" role="status" hidden></p>
+        <div class="boutons-actions">
+          <button type="submit" class="bouton-action principal">Enregistrer</button>
+          <button type="button" id="edition-annuler" class="bouton-action secondaire">Annuler</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Page de fiche (recette, cocktail) : s'ouvre quand on touche la carte.
+       Tout le texte est mis par app.js avec textContent (aucun HTML importé). -->
+  <dialog id="fiche" class="fiche-page" aria-labelledby="fiche-titre">
+    <div class="fiche-contenu" tabindex="-1" autofocus>
+      <div class="fiche-haut">
+        <button type="button" id="fiche-retour" class="bouton-rond fiche-retour" aria-label="Retour">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+      </div>
+
+      <!-- Photos : défilement horizontal ; points indicateurs s'il y en a plusieurs -->
+      <div id="fiche-photos" class="fiche-photos" hidden></div>
+      <div id="fiche-points" class="fiche-points" aria-hidden="true" hidden></div>
+
+      <!-- En-tête : type, titre, temps, portions, note, source -->
+      <header class="fiche-entete verre">
+        <p id="fiche-type" class="fiche-type"></p>
+        <h2 id="fiche-titre"></h2>
+        <ul id="fiche-infos" class="fiche-infos"></ul>
+        <p id="fiche-note" class="fiche-note" hidden></p>
+        <a id="fiche-source" class="fiche-source" target="_blank" rel="noopener" hidden>Voir la source ↗</a>
+      </header>
+
+      <!-- Ingrédients, adaptés au nombre de personnes -->
+      <section id="fiche-bloc-ingredients" class="fiche-bloc verre" aria-labelledby="fiche-titre-ingredients" hidden>
+        <h3 id="fiche-titre-ingredients">Ingrédients</h3>
+        <div class="portions">
+          <button type="button" id="portions-moins" class="bouton-portions" aria-label="Une personne de moins">
+            <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M5 12h14"/></svg>
+          </button>
+          <p id="portions-texte" aria-live="polite"></p>
+          <button type="button" id="portions-plus" class="bouton-portions" aria-label="Une personne de plus">
+            <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+          </button>
+        </div>
+        <p id="portions-inconnues" class="aide portions-aide" hidden>
+          Portions d'origine inconnues : les quantités sont comptées pour 4.
+        </p>
+        <button type="button" id="portions-retablir" class="bouton-retablir" hidden></button>
+        <ul id="fiche-ingredients" class="fiche-ingredients"></ul>
+      </section>
+
+      <!-- Étapes : une carte par étape -->
+      <section id="fiche-bloc-etapes" aria-labelledby="fiche-titre-etapes" hidden>
+        <h3 id="fiche-titre-etapes" class="fiche-titre-bloc">Étapes</h3>
+        <ol id="fiche-etapes" class="fiche-etapes"></ol>
+      </section>
+
+      <p id="fiche-vide" class="aide vide" hidden>
+        Pas encore d'ingrédients ni d'étapes. Touchez « Modifier » pour les ajouter.
+      </p>
+
+      <!-- Photo de la fiche : changer (sans IA) ou retirer -->
+      <div class="fiche-boutons-photo">
+        <button type="button" id="fiche-changer-photo" class="bouton-action">Changer la photo</button>
+        <button type="button" id="fiche-retirer-photo" class="bouton-action" hidden>Retirer la photo</button>
+      </div>
+      <input type="file" id="fiche-fichier-photo" accept="image/*" hidden>
+      <p id="fiche-message-photo" class="message erreur" role="status" hidden></p>
+
+      <div class="boutons-actions fiche-boutons">
+        <button type="button" id="fiche-modifier" class="bouton-action">Modifier</button>
+        <button type="button" id="fiche-supprimer" class="bouton-action supprimer">Supprimer</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Page Notes (Réglages → Notes) : liste simple à cocher, façon Rappels.
+       Le texte des notes est mis par notes.js dans des champs (aucun HTML). -->
+  <dialog id="page-notes" class="fiche-page page-notes" aria-labelledby="notes-titre">
+    <div class="fiche-contenu notes-contenu" tabindex="-1" autofocus>
+      <div class="notes-barre">
+        <button type="button" id="notes-retour" class="bouton-verre-rond" aria-label="Retour aux réglages">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <button type="button" id="notes-menu-bouton" class="bouton-verre-rond" aria-label="Plus d'options"
+                aria-haspopup="true" aria-expanded="false" aria-controls="notes-menu">
+          <svg viewBox="0 0 24 24" class="icone-svg icone-plein" aria-hidden="true"><circle cx="5.5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18.5" cy="12" r="1.6"/></svg>
+        </button>
+        <div id="notes-menu" class="notes-menu verre-flou" hidden>
+          <button type="button" id="notes-copier">Copier les notes à faire</button>
+          <button type="button" id="notes-supprimer-faites" class="notes-menu-rouge">Supprimer les notes terminées</button>
+        </div>
+      </div>
+      <h2 id="notes-titre" class="notes-titre">Notes</h2>
+      <p id="notes-annonce" class="notes-annonce" role="status" hidden></p>
+
+      <!-- À faire (les plus récentes en bas), puis la ligne d'ajout -->
+      <ul id="notes-liste" class="notes-liste" aria-label="Notes à faire"></ul>
+      <div id="notes-ligne-ajout" class="note note-ajout">
+        <div class="note-glisse">
+          <span class="note-cercle note-cercle-ajout" aria-hidden="true"></span>
+          <textarea id="notes-nouvelle" class="note-texte" rows="1" maxlength="1000"
+                    enterkeyhint="next" autocomplete="off" autocorrect="on" autocapitalize="sentences"
+                    aria-label="Nouvelle note" placeholder="Nouvelle note"></textarea>
+        </div>
+      </div>
+      <p id="notes-vide" class="notes-vide" hidden>Aucune note pour l'instant. Touchez « Nouvelle note » pour noter une idée.</p>
+
+      <!-- Terminées (N) : repliée par défaut -->
+      <section id="notes-bloc-faites" class="notes-bloc-faites" hidden>
+        <button type="button" id="notes-bascule-faites" class="notes-bascule" aria-expanded="false" aria-controls="notes-faites">
+          <span id="notes-bascule-texte">Terminées (0)</span>
+          <svg viewBox="0 0 24 24" class="icone-svg notes-chevron" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+        </button>
+        <ul id="notes-faites" class="notes-liste notes-liste-faites" aria-label="Notes terminées" hidden></ul>
+      </section>
+    </div>
+  </dialog>
+
+  <!-- Ajout avec l'IA (Gemini) : photos et / ou texte → brouillon → Enregistrer.
+       Rien n'est envoyé sans un appui sur « Analyser » ou « Revérifier » ;
+       rien n'est enregistré sans un appui sur « Enregistrer ».
+       Tout le texte est mis par app.js avec textContent ou dans des champs. -->
+  <dialog id="page-ia" class="fiche-page page-ia" aria-labelledby="ia-titre">
+    <div class="fiche-contenu" tabindex="-1" autofocus>
+      <div class="fiche-haut ia-haut">
+        <button type="button" id="ia-fermer" class="bouton-rond fiche-retour" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <h2 id="ia-titre" class="ia-titre verre">Recette : photos et texte</h2>
+      </div>
+
+      <!-- Étape 1 : photos, texte, lien -->
+      <section id="ia-saisie">
+        <div class="fiche-bloc verre">
+          <h3>Photos <span id="ia-compte" class="ia-compte"></span></h3>
+          <ul id="ia-miniatures" class="ia-miniatures"></ul>
+          <button type="button" id="ia-ajouter-photo" class="bouton-contour">+ Ajouter une photo</button>
+          <input type="file" id="ia-fichiers" accept="image/*" multiple hidden>
+          <p id="ia-message-photos" class="message erreur" role="status" hidden></p>
+        </div>
+        <!-- Photo de la fiche (vignette) : facultative, JAMAIS envoyée à l'IA -->
+        <div class="fiche-bloc verre">
+          <h3>Photo de la fiche <span class="ia-compte">facultatif</span></h3>
+          <p class="aide ia-aide-vignette">Elle devient l'image de la fiche. Elle n'est pas envoyée à l'IA.</p>
+          <div id="ia-vignette" class="ia-miniature ia-vignette" hidden>
+            <img id="ia-vignette-image" alt="Photo de la fiche">
+            <button type="button" id="ia-vignette-retirer" class="ia-retirer" aria-label="Retirer la photo de la fiche">✕</button>
+          </div>
+          <button type="button" id="ia-vignette-choisir" class="bouton-contour">+ Choisir la photo de la fiche</button>
+          <input type="file" id="ia-vignette-fichier" accept="image/*" hidden>
+          <p id="ia-message-vignette" class="message erreur" role="status" hidden></p>
+        </div>
+        <div class="fiche-bloc verre ia-champs">
+          <h3><label for="ia-texte">Texte</label></h3>
+          <textarea id="ia-texte" rows="6" maxlength="20000" autocapitalize="sentences"
+                    placeholder="Collez ici une légende de vidéo, un texte copié d'une page…"></textarea>
+          <label for="ia-lien" class="etiquette">Lien source (facultatif)</label>
+          <input id="ia-lien" type="url" inputmode="url" autocomplete="off" autocorrect="off"
+                 autocapitalize="off" spellcheck="false" placeholder="https://…">
+        </div>
+        <p class="ia-avis">Les photos et le texte sont envoyés à Google (Gemini) pour être analysés.</p>
+        <button type="button" id="ia-analyser" class="bouton-action principal ia-gros" disabled>
+          Analyser avec l'IA
+        </button>
+        <p id="ia-message" class="message erreur" role="status" hidden></p>
+      </section>
+
+      <!-- Pendant l'appel à Gemini : roue qui tourne et « Annuler » -->
+      <div id="ia-chargement" class="ia-chargement verre" role="status" hidden>
+        <span class="ia-roue" aria-hidden="true"></span>
+        <p id="ia-chargement-texte">Analyse en cours…</p>
+        <button type="button" id="ia-annuler" class="bouton-action secondaire">Annuler</button>
+      </div>
+
+      <!-- Étape 2 : brouillon modifiable -->
+      <form id="ia-brouillon" class="edition ia-brouillon" novalidate hidden>
+        <div id="ia-avertissements" class="ia-avertissements" role="status" hidden>
+          <strong>À vérifier</strong>
+          <ul id="ia-liste-avertissements"></ul>
+        </div>
+        <p class="aide ia-aide-brouillon">Brouillon : rien n'est enregistré tant que vous n'avez pas touché « Enregistrer ».</p>
+
+        <div class="fiche-bloc verre edition-recette">
+          <label for="ia-b-titre" class="etiquette">Titre</label>
+          <input id="ia-b-titre" type="text" maxlength="200" autocapitalize="sentences">
+          <label for="ia-b-type" class="etiquette">Type</label>
+          <select id="ia-b-type">
+            <option value="recette">🍳 Recette</option>
+            <option value="cocktail">🍸 Cocktail</option>
+          </select>
+          <div class="edition-colonnes">
+            <div class="edition-champ">
+              <label for="ia-b-portions" class="etiquette">Portions</label>
+              <input id="ia-b-portions" type="number" inputmode="numeric" min="1" max="100">
+            </div>
+            <div class="edition-champ">
+              <label for="ia-b-preparation" class="etiquette">Préparation (min)</label>
+              <input id="ia-b-preparation" type="number" inputmode="numeric" min="1" max="10000">
+            </div>
+            <div id="ia-b-champ-cuisson" class="edition-champ">
+              <label for="ia-b-cuisson" class="etiquette">Cuisson (min)</label>
+              <input id="ia-b-cuisson" type="number" inputmode="numeric" min="1" max="10000">
+            </div>
+          </div>
+          <div id="ia-b-cocktail" class="edition-recette">
+            <label for="ia-b-verre" class="etiquette">Verre</label>
+            <input id="ia-b-verre" type="text" maxlength="100" list="suggestions-verres" placeholder="Tumbler, coupe…">
+            <label for="ia-b-methode" class="etiquette">Méthode</label>
+            <input id="ia-b-methode" type="text" maxlength="100" list="suggestions-methodes" placeholder="Shaker, direct dans le verre…">
+            <label for="ia-b-alcool" class="etiquette">Alcool de base</label>
+            <input id="ia-b-alcool" type="text" maxlength="100" placeholder="Rhum, gin, vodka…">
+          </div>
+        </div>
+
+        <div class="fiche-bloc verre edition-recette">
+          <label for="ia-b-ingredients" class="etiquette">Ingrédients (un par ligne)</label>
+          <textarea id="ia-b-ingredients" rows="7"></textarea>
+          <label for="ia-b-etapes" class="etiquette">Étapes (une par ligne ; « # Titre » pour une partie)</label>
+          <textarea id="ia-b-etapes" rows="8"></textarea>
+          <label for="ia-b-note" class="etiquette">Note (facultatif)</label>
+          <textarea id="ia-b-note" rows="3" maxlength="1000"></textarea>
+          <label for="ia-b-lien" class="etiquette">Lien source (facultatif)</label>
+          <input id="ia-b-lien" type="url" inputmode="url" autocomplete="off" autocorrect="off"
+                 autocapitalize="off" spellcheck="false" placeholder="https://…">
+        </div>
+
+        <!-- Garder une photo : décoché par défaut ; sinon aucune photo n'est gardée -->
+        <div id="ia-bloc-photo" class="fiche-bloc verre">
+          <!-- Photo de la fiche choisie à l'étape 1 : elle remplace la case -->
+          <div id="ia-rappel-vignette" class="ia-rappel-vignette" hidden>
+            <img id="ia-rappel-vignette-image" alt="">
+            <span>Photo de la fiche : celle que vous avez choisie (non envoyée à l'IA).</span>
+          </div>
+          <label id="ia-case-garder" class="ia-case">
+            <input type="checkbox" id="ia-garder-photo">
+            <span>Garder une photo comme image de la fiche</span>
+          </label>
+          <div id="ia-choix-photo" class="ia-choix-photo" role="radiogroup" aria-label="Photo à garder" hidden></div>
+        </div>
+
+        <p id="ia-message-brouillon" class="message" role="status" hidden></p>
+        <div class="boutons-actions ia-boutons">
+          <button type="submit" class="bouton-action principal">Enregistrer</button>
+          <button type="button" id="ia-reverifier" class="bouton-contour">Revérifier avec l'IA</button>
+          <button type="button" id="ia-retour-saisie" class="bouton-action">Retour aux photos et au texte</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Menu des catégories (bouton + de l'accueil) : 2 boutons ronds dans une
+       carte en verre au-dessus de la barre, et une copie du bouton + qui
+       pivote et devient une croix -->
+  <dialog id="menu-categories" class="menu-categories" aria-label="Choisir une catégorie">
+    <div class="menu-carte verre-flou" tabindex="-1" autofocus>
+      <!-- Même ordre que la barre du bas -->
+      <button type="button" class="choix-menu" data-type="recette"><span class="rond-menu"></span>Recette</button>
+      <button type="button" class="choix-menu" data-type="cocktail"><span class="rond-menu"></span>Cocktail</button>
+    </div>
+    <button type="button" id="menu-fermer" class="bouton-plus bouton-croix" aria-label="Fermer le menu">
+      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </dialog>
+
+  <!-- Calque de saisie : monte du bas après le choix d'une catégorie -->
+  <dialog id="feuille-ajout" class="panneau feuille" aria-labelledby="ajout-titre">
+    <form id="formulaire-ajout" class="feuille-contenu" novalidate>
+      <!-- En-tête sur une ligne : retour au menu | icône | titre | fermer -->
+      <div class="feuille-entete">
+        <button type="button" id="ajout-retour" class="bouton-rond" aria-label="Retour aux catégories">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+        </button>
+        <span id="ajout-icone" class="feuille-icone"></span>
+        <h2 id="ajout-titre">Ajouter une recette</h2>
+        <button type="button" id="ajout-fermer" class="bouton-rond" aria-label="Fermer">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+      </div>
+
+      <!-- Champ de saisie ; « Ajouter » à droite pour Recette -->
+      <div class="ligne-saisie">
+        <input id="champ-titre" type="text" aria-labelledby="ajout-titre"
+               autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false"
+               enterkeyhint="done" placeholder="Nom de la recette">
+        <button type="button" id="ajout-direct" class="bouton-ajout-ligne" hidden>Ajouter</button>
+      </div>
+
+      <!-- Recette et cocktail seulement : lien (facultatif) et note -->
+      <div id="zone-recette" class="zone-recette" hidden>
+        <div class="ligne-lien">
+          <input id="champ-lien" type="url" inputmode="url" aria-label="Lien de la recette (facultatif)"
+                 autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+                 enterkeyhint="done" placeholder="Lien (facultatif)">
+        </div>
+        <!-- Message sous le lien (par exemple : lien non valide) -->
+        <p id="message-coller" class="aide message-coller" role="status" hidden></p>
+        <!-- Importer : lit la recette de la page (via le relais) et remplit la fiche -->
+        <button type="button" id="bouton-importer-lien" class="bouton-contour bouton-importer-lien">
+          Importer depuis le lien
+        </button>
+        <p id="message-import" class="message" role="status" hidden></p>
+        <!-- Photos et texte : ouvre l'écran d'analyse avec l'IA (Gemini) -->
+        <button type="button" id="bouton-ouvrir-ia" class="bouton-contour bouton-ouvrir-ia">
+          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z M12 17a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>
+          Photos et texte (IA)
+        </button>
+        <textarea id="champ-note" rows="3" maxlength="1000" aria-label="Note (facultatif)"
+                  autocapitalize="sentences" placeholder="Note (facultatif)"></textarea>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Fenêtre de confirmation avant de remplacer la liste.
+       <dialog> est une balise HTML pour les fenêtres par-dessus la page. -->
+  <dialog id="fenetre-import">
+    <h2>Remplacer la liste ?</h2>
+    <p id="texte-import"></p>
+    <p id="conseil-sauvegarde">
+      Conseil : sauvegarde d'abord ta liste actuelle, vérifie qu'elle est bien
+      enregistrée, puis appuie sur « Remplacer ».
+    </p>
+    <p id="info-sauvegarde-faite" hidden>
+      ✅ Sauvegarde proposée. Si elle est bien enregistrée, tu peux remplacer.
+    </p>
+    <div class="boutons-fenetre">
+      <button type="button" id="bouton-sauver-avant">📤 Sauvegarder ma liste actuelle</button>
+      <button type="button" id="bouton-remplacer" class="danger">Remplacer</button>
+      <button type="button" id="bouton-annuler-import" class="secondaire">Annuler</button>
+    </div>
+  </dialog>
+
+  <script src="recettes.js"></script>
+  <script src="ia.js"></script>
+  <script src="photos.js"></script>
+  <script src="app.js"></script>
+  <script src="notes.js"></script>
+</body>
+</html>
