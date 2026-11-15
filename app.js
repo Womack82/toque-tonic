@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.0";
+const VERSION = "v1.1";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -76,8 +76,7 @@ const listeRecents = document.getElementById("liste-recents");
 const recentsVide = document.getElementById("recents-vide");
 const liste = document.getElementById("liste");
 const messageVide = document.getElementById("message-vide");
-// (le bouton Notes de la barre est géré par notes.js)
-const onglets = document.querySelectorAll(".onglet[data-type]");
+const onglets = document.querySelectorAll(".onglet");
 
 // Nom du type affiché sous le titre des cartes
 const NOMS_SIMPLES = { recette: "Recette", cocktail: "Cocktail" };

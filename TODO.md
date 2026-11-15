@@ -11,3 +11,4 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 ## Fait
 
 - [x] v1.0 — Création de Toque&Tonic à partir de Wodo v1.30 : recettes, cocktails et notes seulement (films, séries, jeux, recherches TMDB et IGDB, liens IMDb, Terminés et Clés API retirés). Accueil avec 2 carrés ; barre du bas Accueil, Recettes | + | Cocktails, Notes ; Notes aussi dans les Réglages. Données rangées sous des noms « toque-tonic… » (séparées de Wodo) ; sauvegardes au format « toque-tonic » ; l'import accepte une sauvegarde de Wodo et n'en garde que les recettes, cocktails, photos et notes. Logo toque de chef (marine, bande orange)
+- [x] v1.1 — Notes : bouton retiré de la barre du bas, elles restent seulement dans Réglages → Notes. Barre : Accueil, Recettes | + | Cocktails
