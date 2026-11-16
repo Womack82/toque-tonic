@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.4";
+const VERSION = "v1.5";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -58,7 +58,8 @@ function migrerFiches() {
 }
 migrerFiches();
 
-// La page affichée : "accueil" ou une catégorie ("recette", "cocktail")
+// La page affichée : "accueil", une catégorie ("recette", "cocktail")
+// ou "favoris"
 let pageActive = "accueil";
 
 // On récupère les morceaux de la page dont on a besoin
@@ -66,9 +67,8 @@ let pageActive = "accueil";
 const formulaire = document.getElementById("formulaire-ajout");
 const champTitre = document.getElementById("champ-titre");
 // En-tête, pages et barre du bas
-const entetePetit = document.getElementById("entete-petit");
-const enteteGrand = document.getElementById("entete-grand");
-const boutonAccueil = document.getElementById("bouton-accueil");
+const titreCategorie = document.getElementById("titre-categorie");
+const compteCategorie = document.getElementById("compte-categorie");
 const pageAccueil = document.getElementById("page-accueil");
 const pageCategorie = document.getElementById("page-categorie");
 const carres = document.querySelectorAll(".carre");
@@ -76,17 +76,13 @@ const listeRecents = document.getElementById("liste-recents");
 const recentsVide = document.getElementById("recents-vide");
 const liste = document.getElementById("liste");
 const messageVide = document.getElementById("message-vide");
-const onglets = document.querySelectorAll(".onglet");
+const onglets = document.querySelectorAll(".tabbar-onglet");
 
 // Nom du type affiché sous le titre des cartes
 const NOMS_SIMPLES = { recette: "Recette", cocktail: "Cocktail" };
 
-// Icônes des types, dessinées en SVG (24 × 24) pour pouvoir les colorer :
-// bol avec vapeur, verre à cocktail
-const ICONES_TYPES = {
-  recette: "M3 12h18a9 7.5 0 0 1-18 0z M8.5 21h7 M8 8.5c-1-1.2 1-2.3 0-3.5 M12 8.5c-1-1.2 1-2.3 0-3.5 M16 8.5c-1-1.2 1-2.3 0-3.5",
-  cocktail: "M4 4h16l-8 9z M7 7.5h10 M12 13v7 M8 20h8 M16 2.5l-2 4",
-};
+// Icônes des types (tracés de icones.js) : toque, coupe à cocktail
+const ICONES_TYPES = { recette: ICONES.toque, cocktail: ICONES.coupe };
 
 // Fabrique une icône SVG à partir d'un tracé (trait de la couleur du texte)
 function creerIcone(trace, classe = "icone-svg") {
@@ -102,7 +98,7 @@ function creerIcone(trace, classe = "icone-svg") {
 }
 
 // Les 2 catégories de la navigation
-const NOMS_PLURIELS = { recette: "Recettes", cocktail: "Cocktails" };
+const NOMS_PLURIELS = { recette: "Recettes", cocktail: "Cocktails", favoris: "Favoris" };
 
 // Date d'ajout d'un élément : son identifiant est l'heure de création
 // (Date.now()). Renvoie null si l'identifiant n'est pas une date.
@@ -144,11 +140,16 @@ function afficher(animer = false) {
   // Page catégorie
   liste.innerHTML = "";
   if (pageActive !== "accueil") {
-    const visibles = elements.filter((el) => el.type === pageActive);
+    // Favoris : les fiches marquées d'un signet ; sinon, un type
+    const visibles = pageActive === "favoris"
+      ? elements.filter((el) => estFiche(el.type) && el.favori)
+      : elements.filter((el) => el.type === pageActive);
     for (const el of visibles) liste.append(creerCarte(el));
-    messageVide.textContent = "Rien ici pour l'instant. Appuie sur + pour ajouter.";
+    messageVide.textContent = pageActive === "favoris"
+      ? "Aucun favori pour l'instant. Touche le signet d'une fiche pour la retrouver ici."
+      : "Rien ici pour l'instant. Appuie sur + pour ajouter.";
     messageVide.hidden = visibles.length > 0;
-    entetePetit.textContent = pluriel(visibles.length, "fiche");
+    compteCategorie.textContent = pluriel(visibles.length, "fiche");
   }
 
   if (animer && !sansAnimation.matches) {
@@ -164,27 +165,28 @@ function afficher(animer = false) {
   }
 }
 
-// Change de page : "accueil" ou une catégorie ("recette", "cocktail")
+// Change de page : "accueil", une catégorie ("recette", "cocktail")
+// ou "favoris"
 function allerA(page) {
   pageActive = page;
   const accueil = page === "accueil";
   pageAccueil.hidden = !accueil;
   pageCategorie.hidden = accueil;
-  enteteSalut();
-  // Catégorie surlignée dans la barre (le bouton Accueil garde toujours
-  // le même style ; aria-current indique la page aux lecteurs d'écran)
-  boutonAccueil.toggleAttribute("aria-current", accueil);
+  if (!accueil) titreCategorie.textContent = NOMS_PLURIELS[page];
+  // Onglet de la page surligné dans la barre
+  // (aria-current indique la page aux lecteurs d'écran)
   for (const onglet of onglets) {
-    const actif = onglet.dataset.type === page;
+    const actif = onglet.dataset.page === page;
     onglet.classList.toggle("actif", actif);
-    onglet.toggleAttribute("aria-current", actif);
+    if (actif) onglet.setAttribute("aria-current", "page");
+    else onglet.removeAttribute("aria-current");
   }
   window.scrollTo(0, 0);
   afficher(true);
 }
 
-// Prénom affiché sur l'accueil : gardé sur l'appareil (Réglages → Prénom),
-// « Womack » s'il n'a jamais été changé
+// Prénom : gardé sur l'appareil (Réglages → Prénom, rubrique cachée depuis
+// la v1.5 : l'accueil ne l'affiche plus), « Womack » s'il n'a jamais été changé
 const CLE_PRENOM = "toque-tonic-prenom";
 const PRENOM_PAR_DEFAUT = "Womack";
 function lirePrenom() {
@@ -195,17 +197,6 @@ function lirePrenom() {
   }
 }
 
-// En-tête de l'accueil : « Bonjour » (petit) et le prénom (grand).
-// Page catégorie : le nom de la catégorie en grand ; le petit texte
-// (« 8 fiches ») est écrit par afficher().
-function enteteSalut() {
-  if (pageActive === "accueil") {
-    entetePetit.textContent = "Bonjour";
-    enteteGrand.textContent = lirePrenom();
-  } else {
-    enteteGrand.textContent = NOMS_PLURIELS[pageActive];
-  }
-}
 
 // Fabrique la carte <li> d'un élément :
 // vignette + titre + type/année (+ date d'ajout sur l'accueil) ; un appui
@@ -693,15 +684,13 @@ const fermerReglages = () => panneauReglages.close();
 document.getElementById("reglages-fermer").addEventListener("click", fermerReglages);
 fermerSurVoile(panneauReglages, fermerReglages);
 
-// --- 4 quater bis. Navigation : accueil, catégories ----------
-boutonAccueil.addEventListener("click", () => allerA("accueil"));
+// --- 4 quater bis. Navigation : accueil, catégories, favoris ----------
 for (const carre of carres) {
   carre.querySelector(".carre-pastille").append(creerIcone(ICONES_TYPES[carre.dataset.type]));
   carre.addEventListener("click", () => allerA(carre.dataset.type));
 }
 for (const onglet of onglets) {
-  onglet.querySelector(".onglet-icone").append(creerIcone(ICONES_TYPES[onglet.dataset.type]));
-  onglet.addEventListener("click", () => allerA(onglet.dataset.type));
+  onglet.addEventListener("click", () => allerA(onglet.dataset.page));
 }
 
 // --- 4 quater. Ajouter un élément : menu des catégories, puis calque de saisie ---
@@ -829,11 +818,11 @@ document.getElementById("menu-fermer").addEventListener("click", fermerMenu);
 // boutons (pointer-events), ils arrivent donc sur le <dialog> lui-même
 fermerSurVoile(menuCategories, fermerMenu);
 
-// Bouton + : sur l'accueil, menu des catégories ; sur une page catégorie,
-// saisie directe dans cette catégorie (pendant l'appui : le clavier s'ouvre)
+// Bouton + : sur Recettes ou Cocktails, saisie directe dans cette catégorie
+// (pendant l'appui : le clavier s'ouvre) ; ailleurs, menu des catégories
 document.getElementById("bouton-ajouter").addEventListener("click", () => {
-  if (pageActive === "accueil") ouvrirMenu();
-  else ouvrirAjout(pageActive);
+  if (estFiche(pageActive)) ouvrirAjout(pageActive);
+  else ouvrirMenu();
 });
 // Flèche de retour : on referme le calque et on revient au menu
 document.getElementById("ajout-retour").addEventListener("click", () => {
@@ -2356,7 +2345,6 @@ function lireCle(nomStockage) {
     champPrenom.value = lirePrenom();
     // « Remettre Womack » n'a de sens que si le prénom a été changé
     boutonEffacerPrenom.hidden = lirePrenom() === PRENOM_PAR_DEFAUT;
-    if (pageActive === "accueil") enteteSalut();
   };
 
   formulairePrenom.addEventListener("submit", (evenement) => {

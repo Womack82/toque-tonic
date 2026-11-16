@@ -25,23 +25,13 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main>
-    <!-- En-tête : logo W puis salutation (ou catégorie) à gauche,
-         bouton Réglages à droite (Accueil est dans la barre du bas) -->
+  <main class="place-tabbar">
+    <!-- En-tête : nom de l'app à gauche, bouton profil (ouvre les Réglages) à droite -->
     <header class="entete">
-      <div class="entete-textes">
-        <p id="entete-petit" class="entete-petit">Bonjour</p>
-        <h1 id="entete-grand" class="entete-grand">Womack</h1>
-      </div>
-      <div class="entete-boutons">
-        <button type="button" id="bouton-reglages" class="bouton-entete" aria-label="Réglages">
-          <!-- Roue dentée -->
-          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true">
-            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-            <circle cx="12" cy="12" r="3"/>
-          </svg>
-        </button>
-      </div>
+      <p class="entete-marque">Toque &amp; Tonic</p>
+      <button type="button" id="bouton-reglages" class="btn-icone" aria-label="Profil et réglages">
+        <svg data-icone="profil"></svg>
+      </button>
     </header>
 
     <!-- Page d'accueil -->
@@ -61,26 +51,29 @@
       <p id="recents-vide" class="aide vide" hidden>Aucune fiche pour l'instant. Appuie sur + pour ajouter.</p>
     </section>
 
-    <!-- Page d'une catégorie (Recettes ou Cocktails) -->
+    <!-- Page d'une liste : Recettes, Cocktails ou Favoris -->
     <section id="page-categorie" hidden>
+      <h1 id="titre-categorie" class="t-ecran"></h1>
+      <p id="compte-categorie" class="t-italique compte-categorie"></p>
       <ul id="liste" class="liste"></ul>
       <p id="message-vide" class="aide vide" hidden></p>
 
     </section>
   </main>
 
-  <!-- Barre du bas, flottante, sur toutes les pages, icônes seules :
-       Accueil, Recettes | bouton + | Cocktails -->
-  <nav class="barre-bas" aria-label="Navigation">
-    <button type="button" id="bouton-accueil" class="bouton-accueil" aria-label="Accueil">
-      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M3.5 11 12 3.8l8.5 7.2 M5.5 9.5V20h4.8v-5.5h3.4V20h4.8V9.5"/></svg>
+  <!-- Barre d'onglets flottante, sur toutes les pages :
+       Accueil, Recettes | bouton + | Cocktails, Favoris.
+       data-page : la page ouverte par l'onglet (voir allerA dans app.js) -->
+  <nav class="tabbar" aria-label="Navigation">
+    <button type="button" class="tabbar-onglet" data-page="accueil"><svg data-icone="maison"></svg>Accueil</button>
+    <button type="button" class="tabbar-onglet" data-page="recette"><svg data-icone="toque"></svg>Recettes</button>
+    <!-- Accueil et Favoris : ouvre le choix Recette / Cocktail.
+         Recettes ou Cocktails : ouvre directement la saisie de ce type -->
+    <button type="button" id="bouton-ajouter" class="tabbar-plus" aria-label="Ajouter une recette ou un cocktail">
+      <svg data-icone="plus"></svg>
     </button>
-    <button type="button" class="onglet" data-type="recette" aria-label="Recettes"><span class="onglet-icone"></span></button>
-    <!-- Accueil : ouvre le menu des catégories. Page catégorie : ouvre la saisie -->
-    <button type="button" id="bouton-ajouter" class="bouton-plus" aria-label="Ajouter un élément">
-      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-    </button>
-    <button type="button" class="onglet" data-type="cocktail" aria-label="Cocktails"><span class="onglet-icone"></span></button>
+    <button type="button" class="tabbar-onglet" data-page="cocktail"><svg data-icone="coupe"></svg>Cocktails</button>
+    <button type="button" class="tabbar-onglet" data-page="favoris"><svg data-icone="signet"></svg>Favoris</button>
   </nav>
 
   <!-- Panneau Réglages : descend du haut, sur un voile sombre.
@@ -103,8 +96,9 @@
 
       <!-- Menu : une ligne par rubrique -->
       <div id="vue-menu">
-        <!-- Prénom affiché sur l'accueil (« Bonjour … ») -->
-        <button type="button" class="ligne-reglage" data-vue="prenom">
+        <!-- Prénom : caché depuis la v1.5 (l'accueil n'affiche plus « Bonjour … ») ;
+             le code et la valeur enregistrée sont gardés -->
+        <button type="button" class="ligne-reglage" data-vue="prenom" hidden>
           <!-- Silhouette -->
           <span class="ligne-icone"><svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg></span>
           <span class="ligne-textes">
@@ -558,8 +552,8 @@
       <button type="button" class="choix-menu" data-type="recette"><span class="rond-menu"></span>Recette</button>
       <button type="button" class="choix-menu" data-type="cocktail"><span class="rond-menu"></span>Cocktail</button>
     </div>
-    <button type="button" id="menu-fermer" class="bouton-plus bouton-croix" aria-label="Fermer le menu">
-      <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+    <button type="button" id="menu-fermer" class="tabbar-plus bouton-croix" aria-label="Fermer le menu">
+      <svg data-icone="plus"></svg>
     </button>
   </dialog>
 

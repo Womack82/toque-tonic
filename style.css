@@ -25,9 +25,11 @@
   --verre-ombre: var(--shadow-card);
   --verre-flou: none;
 
-  /* Distance entre le bas de l'écran et la barre du bas (au moins la
-     zone de la barre d'accueil de l'iPhone) */
-  --bas-barre: max(22px, env(safe-area-inset-bottom));
+  /* Bas de la barre d'onglets flottante : 28 px au-dessus de la zone de
+     sécurité de l'iPhone (voir .tabbar dans composants.css) */
+  --bas-barre: calc(28px + env(safe-area-inset-bottom));
+  /* Hauteur de la barre : 56 (onglet) + 2 × 8 (marges) + 2 × 1 (filet) */
+  --hauteur-barre: 74px;
 }
 
 * { box-sizing: border-box; }
@@ -43,15 +45,15 @@ body {
   font: var(--text-body);
   color: var(--ink);
   background: var(--background);
-  padding: 0 16px;
+  padding: 0 var(--screen-margin);
 }
 
 
+/* La place sous la liste (pour que la barre d'onglets ne cache jamais la
+   dernière carte) vient de la classe .place-tabbar (composants.css) */
 main {
   max-width: 600px;
   margin: 0 auto;
-  /* Place libre sous la liste : la barre du bas ne cache jamais la dernière carte */
-  padding-bottom: calc(var(--bas-barre) + 72px + 28px);
 }
 
 h1, h2 { color: var(--texte); }
@@ -92,47 +94,26 @@ button, input, select, textarea, .etiquette, .badge {
 }
 
 /* ---------- En-tête ---------- */
-/* Gauche : logo W puis « Bonjour » / « Womack » (ou nombre / catégorie) ;
-   droite : bouton Réglages */
+/* Gauche : « Toque & Tonic » ; droite : bouton profil (Réglages) */
 .entete {
-  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  height: 48px;
-  box-sizing: content-box;
-  padding-top: max(54px, calc(env(safe-area-inset-top) + 10px));
-  margin-bottom: 20px;
+  gap: var(--space-2);
+  padding-top: max(var(--space-6), calc(env(safe-area-inset-top) + var(--space-2)));
+  margin-bottom: var(--space-6);
 }
-/* margin-right: auto pousse le bouton Réglages tout à droite
-   et garde le logo collé aux textes */
-.entete-textes { position: relative; z-index: 1; min-width: 0; margin-right: auto; }
-.entete-petit { margin: 0; font-size: 14px; line-height: 1.2; color: var(--gris); }
-.entete-grand {
+.entete-marque {
   margin: 0;
-  font-size: 28px;
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  white-space: nowrap;
+  font: var(--text-card-title);
+  font-size: 24px;
+  line-height: 32px;
+  letter-spacing: var(--tracking-title);
+  color: var(--ink);
 }
 
-.entete-boutons { position: relative; z-index: 1; display: flex; gap: 8px; flex-shrink: 0; }
-/* Bouton rond de 48 px (Réglages) : verre, icône bleue */
-.bouton-entete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border-radius: 50%;
-  background: var(--verre-fond);
-  border: var(--verre-bord);
-  box-shadow: var(--verre-ombre);
-  color: var(--bleu);
-}
+/* Titre des pages de liste (Recettes, Cocktails, Favoris) et nombre de fiches */
+.compte-categorie { margin: var(--space-1) 0 var(--space-5); }
 
 /* ---------- Accueil : 2 carrés (Recettes, Cocktails) ---------- */
 .carres { display: flex; gap: 8px; }
@@ -309,80 +290,6 @@ button, input, select, textarea, .etiquette, .badge {
 }
 @keyframes apparaitre-bas { from { opacity: 0; transform: translateY(16px); } }
 
-/* ---------- Barre du bas (flottante, sur toutes les pages) ---------- */
-/* Accueil, Recettes | bouton + | Cocktails : 4 colonnes
-   de même largeur (le + est donc un peu décalé du centre).
-   Icônes seules (le nom est dans aria-label). */
-.barre-bas {
-  position: fixed;
-  left: calc(16px + env(safe-area-inset-left));
-  right: calc(16px + env(safe-area-inset-right));
-  bottom: var(--bas-barre);
-  z-index: 20;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr) auto 1fr;
-  align-items: center;
-  justify-items: center;
-  max-width: 568px;
-  height: 72px;
-  margin: 0 auto;
-  padding: 0 8px;
-  border-radius: 36px;
-  background: var(--card);
-  border: var(--verre-bord);
-  box-shadow: var(--shadow-bar);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-/* Bouton catégorie : 44 × 48, icône 24 px grise */
-.onglet {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 48px;
-  padding: 0;
-  border: none;
-  border-radius: 24px;
-  background: transparent;
-  color: var(--gris);
-}
-.onglet-icone { display: flex; }
-.onglet-icone .icone-svg { width: 24px; height: 24px; }
-/* Catégorie affichée : fond bleu pâle, icône bleue */
-.onglet.actif { background: var(--primary-tint); color: var(--primary); }
-
-/* Bouton Accueil : se démarque, toujours le même style (actif ou non) :
-   rond 48 px, dégradé bleu, icône blanche, liseré blanc, ombre bleue */
-.bouton-accueil {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 48px;
-  height: 48px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--sage);
-  color: var(--on-primary);
-}
-.bouton-accueil .icone-svg { width: 24px; height: 24px; }
-
-/* Bouton + : rond 56 px, dégradé orange, icône marine, ombre orange */
-.bouton-plus {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--primary);
-  color: var(--on-primary);
-}
-.bouton-plus .icone-svg { width: 28px; height: 28px; stroke-width: 2.5; }
-
 /* ---------- Menu des catégories (bouton + de l'accueil) ---------- */
 /* Le <dialog> couvre tout l'écran, transparent : seul le voile se voit */
 .menu-categories {
@@ -412,7 +319,7 @@ button, input, select, textarea, .etiquette, .badge {
   position: fixed;
   left: 0;
   right: 0;
-  bottom: calc(var(--bas-barre) + 72px + 14px);
+  bottom: calc(var(--bas-barre) + var(--hauteur-barre) + 14px);
   display: flex;
   gap: 4px;
   width: max-content;
@@ -458,14 +365,16 @@ button, input, select, textarea, .etiquette, .badge {
 @keyframes surgir { from { opacity: 0; transform: translateY(12px); } }
 
 /* Copie du bouton + posée exactement sur celui de la barre (au-dessus du
-   voile) : elle pivote de 45° et devient une croix de fermeture */
+   voile) : elle pivote de 45° et devient une croix de fermeture.
+   Le + (52 px) est au centre de la barre : bas de la barre + 11 px
+   (filet 1 + marge 8 + (56 − 52) / 2) */
 #menu-fermer {
   position: fixed;
-  left: calc(50% - 28px);
-  bottom: calc(var(--bas-barre) + 8px);
+  left: calc(50% - 26px);
+  bottom: calc(var(--bas-barre) + 11px);
 }
-.bouton-croix .icone-svg { transform: rotate(45deg); }
-.menu-categories[open] .bouton-croix .icone-svg { animation: pivoter 200ms ease-out; }
+.bouton-croix .icone { transform: rotate(45deg); }
+.menu-categories[open] .bouton-croix .icone { animation: pivoter 200ms ease-out; }
 @keyframes pivoter { from { transform: rotate(0deg); } }
 
 /* ---------- Panneaux (Réglages en haut, actions en bas) ---------- */
@@ -696,7 +605,6 @@ button,
     border-color: var(--accent-survol);
     filter: none;
   }
-  .bouton-plus:hover { filter: brightness(1.05); }
 }
 
 /* Appui (doigt ou clic) : le bouton s'enfonce légèrement.
@@ -717,7 +625,6 @@ button:active,
   border-color: var(--accent-survol);
   filter: none;
 }
-.bouton-plus:active { filter: brightness(1.08); }
 
 /* Contour bien visible quand on navigue au clavier (touche Tab) */
 button:focus-visible,
@@ -1700,8 +1607,6 @@ form.edition .ia-photo-choix input {
   .verre,
   .verre-flou,
   .carte,
-  .bouton-entete,
-  .barre-bas,
   .panneau,
   .menu-carte,
   .fiche-retour,
