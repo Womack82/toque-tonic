@@ -20,8 +20,8 @@
   nom du cache (« toque-tonic-v… »). Ne pas les changer : on perdrait les
   données enregistrées. Le nettoyage du cache (`service-worker.js`) ne doit
   effacer que les caches « toque-tonic-… ».
-- L'import accepte aussi les sauvegardes de Wodo (`format: "wodo"` ou
-  `"mes-listes"`) : seuls les recettes, cocktails et notes sont repris.
+- Depuis la v1.13, l'import n'accepte que les sauvegardes de Toque&Tonic
+  (`format: "toque-tonic"`) ; celles de Wodo sont refusées avec un message.
 - Le relais Cloudflare (import de recettes depuis un lien) est celui de
   Wodo : son code et son mode d'emploi sont dans `../wodo/relais/`.
 - Utilisée surtout sur iPhone.

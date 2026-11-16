@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.12";
+const VERSION = "v1.13";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -2446,9 +2446,10 @@ iaBrouillon.addEventListener("submit", async (evenement) => {
 // Numéro de version du format du fichier. Si un jour on change la forme
 // du fichier, on passera à 2 et on saura lire les anciens fichiers.
 const FORMAT_NOM = "toque-tonic";
-// On accepte aussi les sauvegardes de Wodo (et de son ancien nom « Mes
-// listes ») : seuls leurs recettes, cocktails et notes sont repris
-const FORMATS_ACCEPTES = [FORMAT_NOM, "wodo", "mes-listes"];
+// Seules les sauvegardes de Toque&Tonic sont acceptées (depuis la v1.13) :
+// celles de Wodo (« wodo », ancien nom « mes-listes ») restent à Wodo
+const FORMATS_ACCEPTES = [FORMAT_NOM];
+const FORMATS_WODO = ["wodo", "mes-listes"];
 // Version 1 : titre, type, fait. Version 2 : + année, affiche, identifiant TMDB
 // (facultatifs). Version 3 : + identifiant RAWG pour les jeux (facultatif).
 // Version 4 : + identifiant IMDb pour les films et séries (facultatif).
@@ -2584,8 +2585,11 @@ async function exporter() {
 // laissés de côté ; « ignores » donne leur nombre.
 // On recopie seulement les champs connus, pour ne rien garder d'inattendu.
 function verifierFichier(donnees) {
+  if (typeof donnees === "object" && donnees !== null && FORMATS_WODO.includes(donnees.format)) {
+    throw new Error("Ce fichier est une sauvegarde de Wodo : importe-le dans Wodo.");
+  }
   if (typeof donnees !== "object" || donnees === null || !FORMATS_ACCEPTES.includes(donnees.format)) {
-    throw new Error("Ce fichier n'est pas une sauvegarde de Toque&Tonic ni de Wodo.");
+    throw new Error("Ce fichier n'est pas une sauvegarde de Toque&Tonic.");
   }
   if (!Number.isInteger(donnees.version) || donnees.version < 1) {
     throw new Error("Le numéro de version du fichier est invalide.");
