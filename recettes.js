@@ -588,6 +588,25 @@ function separerIngredient(ligne, detail, facteur) {
   return { quantite, nom: nom || String(ligne).trim() };
 }
 
+// --- Dosages des cocktails : centilitres ou onces (v1.9) ---
+// Convention des bars : 1 oz = 3 cl (la valeur exacte est 2,96 cl).
+// quantite : texte venant de separerIngredient (« 4,5 cl », « 1 ½ oz »).
+// Renvoie la quantité dans l'unité voulue (« cl » ou « oz »), ou le texte
+// tel quel si ce n'est pas un volume en cl, ml ou oz (« 1 trait »).
+const CL_PAR_UNITE = { cl: 1, ml: 0.1, oz: 3 };
+function convertirDosage(quantite, unite) {
+  const m = /^(.+?)\s*(cl|ml|oz)$/i.exec(String(quantite).trim());
+  if (!m) return quantite;
+  const depart = m[2].toLowerCase();
+  if (depart === unite) return quantite;
+  const nombre = lireNombre(m[1]);
+  if (!(nombre > 0)) return quantite;
+  const enCl = nombre * CL_PAR_UNITE[depart];
+  // Onces : en fractions (« 1 ½ oz ») ; centilitres : décimales (« 4,5 cl »)
+  const texte = unite === "oz" ? formaterNombre(enCl / 3, true, ",") : formaterNombre(enCl, false, ",");
+  return texte ? `${texte} ${unite}` : quantite;
+}
+
 // Après une modification des lignes d'ingrédients : chaque ligne restée
 // identique garde son détail, une ligne modifiée ou nouvelle n'en a plus.
 // Renvoie undefined s'il ne reste aucun détail.

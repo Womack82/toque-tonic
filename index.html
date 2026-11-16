@@ -371,13 +371,16 @@
       <input type="file" id="fiche-fichier-photo" accept="image/*" hidden>
       <p id="fiche-message-photo" class="message erreur" role="status" hidden></p>
 
-      <!-- 4 métadonnées (icônes ambre) : préparation, cuisson, portions, niveau -->
+      <!-- 4 métadonnées (icônes ambre). Recette : préparation, cuisson,
+           portions, niveau (sur une ligne). Cocktail : verre, glace,
+           garniture, temps (tuiles 2 × 2) + méthode et alcool de base -->
       <ul id="fiche-infos" class="fiche-infos"></ul>
+      <p id="fiche-infos-plus" class="t-italique fiche-infos-plus" hidden></p>
 
       <!-- Portions : − / + recalcule les quantités (rien n'est enregistré) -->
       <section id="fiche-bloc-portions" class="fiche-portions" aria-label="Portions" hidden>
         <div class="fiche-portions-textes">
-          <p class="t-libelle">Portions</p>
+          <p id="fiche-portions-libelle" class="t-libelle">Portions</p>
           <p id="portions-inconnues" class="t-italique fiche-portions-aide" hidden>
             Portions d'origine inconnues : quantités comptées pour 4.
           </p>
@@ -397,8 +400,17 @@
       <!-- Ingrédients : une carte par ligne, à cocher ; « 2 SUR 8 PRÊTS » -->
       <section id="fiche-bloc-ingredients" class="fiche-bloc" aria-labelledby="fiche-titre-ingredients" hidden>
         <div class="fiche-bloc-entete">
-          <h3 id="fiche-titre-ingredients" class="t-section">Ingrédients</h3>
+          <div>
+            <h3 id="fiche-titre-ingredients" class="t-section">Ingrédients</h3>
+            <!-- Cocktail : « Pour 1 verre » -->
+            <p id="fiche-pour" class="t-italique fiche-pour" hidden></p>
+          </div>
           <span id="fiche-compteur" class="pilule pilule-neutre" aria-live="polite"></span>
+        </div>
+        <!-- Cocktail : bascule CL / OZ (choix gardé sur l'appareil) -->
+        <div id="fiche-unites" class="bascule" role="group" aria-label="Unité des dosages" hidden>
+          <button type="button" class="bascule-choix" data-unite="cl" aria-pressed="true">cl</button>
+          <button type="button" class="bascule-choix" data-unite="oz" aria-pressed="false">oz</button>
         </div>
         <ul id="fiche-ingredients" class="fiche-ingredients"></ul>
       </section>

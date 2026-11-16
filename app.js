@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.8";
+const VERSION = "v1.9";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1082,6 +1082,13 @@ const fichePhotoVide = document.getElementById("fiche-photo-vide");
 const ficheBoutonsPhoto = document.getElementById("fiche-boutons-photo");
 const ficheTitre = document.getElementById("fiche-titre");
 const ficheInfos = document.getElementById("fiche-infos");
+const ficheInfosPlus = document.getElementById("fiche-infos-plus");
+const fichePortionsLibelle = document.getElementById("fiche-portions-libelle");
+const ficheTitreIngredients = document.getElementById("fiche-titre-ingredients");
+const ficheTitreEtapes = document.getElementById("fiche-titre-etapes");
+const ficheTitreNotes = document.getElementById("fiche-titre-notes");
+const fichePour = document.getElementById("fiche-pour");
+const ficheUnites = document.getElementById("fiche-unites");
 const ficheNote = document.getElementById("fiche-note");
 const ficheBlocSource = document.getElementById("fiche-bloc-source");
 const ficheSourceTexte = document.getElementById("fiche-source-texte");
@@ -1107,8 +1114,18 @@ let idFiche = null;
 let personnesFiche = null;
 let ingredientsCoches = new Set();
 
-// Portions d'origine ; 4 si la recette ne les donne pas
-const portionsDeBase = (el) => el.portions || 4;
+// Portions d'origine ; si la fiche ne les donne pas : 4 pour une recette,
+// 1 verre pour un cocktail
+const portionsDeBase = (el) => el.portions || (el.type === "cocktail" ? 1 : 4);
+// Un cocktail s'affiche toujours pour 1 verre à l'ouverture
+const portionsAuDepart = (el) => (el.type === "cocktail" ? 1 : portionsDeBase(el));
+
+// Unité des dosages des cocktails : « cl » ou « oz », gardée sur l'appareil
+const CLE_UNITE = "toque-tonic-unite-dosages";
+let uniteDosages = "cl";
+try {
+  if (localStorage.getItem(CLE_UNITE) === "oz") uniteDosages = "oz";
+} catch { /* mémoire indisponible : centilitres */ }
 
 function ouvrirFiche(id) {
   if (!elements.some((e) => e.id === id)) return;
@@ -1168,28 +1185,53 @@ function afficherFiche() {
   badge.className = `pilule pilule-${el.type}`;
   badge.textContent = NOMS_SIMPLES[el.type];
   ficheBadges.replaceChildren(badge);
+  // Cocktail : « Contient de l'alcool » (le champ, sinon un alcool de base
+  // renseigné) ou « Sans alcool » si c'est indiqué
+  const cocktail = el.type === "cocktail";
+  const alcool = el.avecAlcool ?? (el.alcoolBase ? true : undefined);
+  if (cocktail && alcool !== undefined) {
+    const pilule = document.createElement("span");
+    pilule.className = alcool ? "pilule pilule-alerte" : "pilule pilule-neutre";
+    pilule.textContent = alcool ? "Contient de l'alcool" : "Sans alcool";
+    ficheBadges.append(pilule);
+  }
   ficheNumeroCarnet.textContent = `Mon carnet · N° ${numeroDansCarnet(el)}`;
   ficheTitre.textContent = el.titre;
 
   afficherPhotos(el);
   majBoutonsPhotoFiche(el);
 
-  // 4 métadonnées. Recette : préparation, cuisson, portions, niveau.
-  // Cocktail (en attendant sa propre fiche) : temps, verre, méthode, verres.
-  const infos = el.type === "recette"
+  // 4 métadonnées. Recette : préparation, cuisson, portions, niveau (ligne).
+  // Cocktail : verre, glace, garniture, temps (tuiles 2 × 2), puis méthode
+  // et alcool de base sur une ligne discrète.
+  const infos = cocktail
     ? [
+      creerInfo("verre", "Verre", el.verre),
+      creerInfo("glace", "Glace", el.glace),
+      creerInfo("garniture", "Garniture", el.garniture),
+      creerInfo("horloge", "Temps", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
+    ]
+    : [
       creerInfo("horloge", "Prép.", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
       creerInfo("flamme", "Cuisson", el.tempsCuisson && formaterDuree(el.tempsCuisson)),
       creerInfo("personnes", "Portions", el.portions && String(el.portions)),
       creerInfo("niveau", "Niveau", el.niveau && NOMS_NIVEAUX[el.niveau]),
-    ]
-    : [
-      creerInfo("horloge", "Temps", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
-      creerInfo("verre", "Verre", el.verre),
-      creerInfo("garniture", "Méthode", el.methode),
-      creerInfo("personnes", "Verres", el.portions && String(el.portions)),
     ];
   ficheInfos.replaceChildren(...infos);
+  ficheInfos.classList.toggle("fiche-tuiles", cocktail);
+  const plus = cocktail
+    ? [el.methode && `Méthode : ${el.methode}`, el.alcoolBase && `Alcool de base : ${el.alcoolBase}`].filter(Boolean)
+    : [];
+  ficheInfosPlus.hidden = plus.length === 0;
+  ficheInfosPlus.textContent = plus.join(" · ");
+
+  // Titres des blocs selon le type
+  ficheTitreIngredients.textContent = cocktail ? "Dosages" : "Ingrédients";
+  ficheTitreEtapes.textContent = cocktail ? "Préparation" : "Étapes";
+  ficheTitreNotes.textContent = cocktail ? "Mes notes de dégustation" : "Mes notes";
+  fichePortionsLibelle.textContent = cocktail ? "Verres" : "Portions";
+  portionsMoins.setAttribute("aria-label", cocktail ? "Un verre de moins" : "Une personne de moins");
+  portionsPlus.setAttribute("aria-label", cocktail ? "Un verre de plus" : "Une personne de plus");
 
   afficherIngredients(el);
 
@@ -1227,9 +1269,10 @@ function afficherFiche() {
   }));
   ficheBlocEtapes.hidden = etapes.length === 0;
   ficheVide.hidden = etapes.length > 0 || (el.ingredients || []).length > 0;
-  // « Lancer le mode cuisine » : seulement s'il y a des étapes numérotées
-  ficheBas.hidden = numero === 0;
-  pageFiche.classList.toggle("avec-bas", numero > 0);
+  // « Lancer le mode cuisine » : pour une recette avec des étapes numérotées
+  const modeCuisinePossible = numero > 0 && !cocktail;
+  ficheBas.hidden = !modeCuisinePossible;
+  pageFiche.classList.toggle("avec-bas", modeCuisinePossible);
 
   // Mes notes
   ficheNote.textContent = el.note || "Pas encore de note. Touche le crayon pour en ajouter une.";
@@ -1329,23 +1372,34 @@ function afficherIngredients(el) {
   const ingredients = el.ingredients || [];
   ficheBlocIngredients.hidden = ingredients.length === 0;
   ficheBlocPortions.hidden = ingredients.length === 0;
+  const cocktail = el.type === "cocktail";
   const base = portionsDeBase(el);
-  const personnes = personnesFiche ?? base;
+  const depart = portionsAuDepart(el);
+  const personnes = personnesFiche ?? depart;
   const facteur = personnes / base;
 
   portionsTexte.textContent = String(personnes);
-  portionsTexte.setAttribute("aria-label", `Pour ${pluriel(personnes, "personne")}`);
+  portionsTexte.setAttribute("aria-label", cocktail ? `Pour ${pluriel(personnes, "verre")}` : `Pour ${pluriel(personnes, "personne")}`);
   portionsMoins.disabled = personnes <= 1;
   portionsPlus.disabled = personnes >= LIMITES_FICHE.portionsMax;
-  portionsInconnues.hidden = Boolean(el.portions);
-  portionsRetablir.hidden = personnes === base;
-  portionsRetablir.textContent = `Revenir à ${base}`;
+  portionsInconnues.hidden = Boolean(el.portions) || cocktail;
+  portionsRetablir.hidden = personnes === depart;
+  portionsRetablir.textContent = `Revenir à ${depart}`;
+  // Cocktail : « Pour 1 verre » et bascule CL / OZ
+  fichePour.hidden = !cocktail;
+  fichePour.textContent = `Pour ${pluriel(personnes, "verre")}`;
+  ficheUnites.hidden = !cocktail;
+  for (const choix of ficheUnites.children) {
+    choix.setAttribute("aria-pressed", String(choix.dataset.unite === uniteDosages));
+  }
 
   // Fiche créée avec l'IA : la quantité détaillée de la ligne (plus fiable),
   // sinon la quantité lue dans la ligne
   const detail = el.ingredientsDetail || [];
   ficheIngredients.replaceChildren(...ingredients.map((ligne, i) => {
-    const { quantite, nom } = separerIngredient(ligne, detail[i], facteur);
+    const separe = separerIngredient(ligne, detail[i], facteur);
+    const nom = separe.nom;
+    const quantite = cocktail ? convertirDosage(separe.quantite, uniteDosages) : separe.quantite;
     const li = document.createElement("li");
     li.className = "ingredient";
     const coche = ingredientsCoches.has(i);
@@ -1395,7 +1449,7 @@ function majCompteur(total) {
 function changerPersonnes(ecart) {
   const el = elements.find((e) => e.id === idFiche);
   if (!el) return;
-  const actuel = personnesFiche ?? portionsDeBase(el);
+  const actuel = personnesFiche ?? portionsAuDepart(el);
   personnesFiche = Math.min(LIMITES_FICHE.portionsMax, Math.max(1, actuel + ecart));
   afficherIngredients(el);
 }
@@ -1407,6 +1461,16 @@ portionsRetablir.addEventListener("click", () => {
   personnesFiche = null;
   afficherIngredients(el);
 });
+
+// Bascule CL / OZ des dosages (cocktails)
+for (const choix of ficheUnites.children) {
+  choix.addEventListener("click", () => {
+    uniteDosages = choix.dataset.unite;
+    try { localStorage.setItem(CLE_UNITE, uniteDosages); } catch { /* gardé jusqu'à la fermeture */ }
+    const el = elements.find((e) => e.id === idFiche);
+    if (el) afficherIngredients(el);
+  });
+}
 
 // Crayon : le panneau de modification monte par-dessus la fiche
 // (« Supprimer la fiche » est en bas de ce panneau depuis la v1.7)
