@@ -7,7 +7,7 @@
 // téléphone continuera d'utiliser l'ancienne copie :
 // chaque changement ajoute 1 au second numéro : v1.0 → v1.1 → v1.2…
 // ⚠️ Change aussi VERSION en haut de app.js (affichée dans Réglages).
-const NOM_CACHE = "toque-tonic-v1.13";
+const NOM_CACHE = "toque-tonic-v1.14";
 
 // ⚠️ Si un seul de ces fichiers est introuvable, rien n'est mis en cache
 // (l'app ne marchera pas hors ligne) : vérifier chaque chemin.

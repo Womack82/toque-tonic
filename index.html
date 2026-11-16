@@ -26,11 +26,15 @@
 </head>
 <body>
   <main class="place-tabbar">
-    <!-- En-tête : nom de l'app à gauche, bouton profil (ouvre les Réglages) à droite -->
+    <!-- En-tête : icône de l'app et « Bonjour Alex » à gauche, roue des
+         Réglages à droite (prénom : Réglages → Prénom, rubrique cachée) -->
     <header class="entete">
-      <p class="entete-marque">Toque &amp; Tonic</p>
-      <button type="button" id="bouton-reglages" class="btn-icone" aria-label="Profil et réglages">
-        <svg data-icone="profil"></svg>
+      <div class="entete-salut">
+        <img class="entete-icone" src="icons/icone-180.png" alt="" width="40" height="40">
+        <p class="entete-marque">Bonjour <span id="entete-prenom">Alex</span></p>
+      </div>
+      <button type="button" id="bouton-reglages" class="btn-icone" aria-label="Réglages">
+        <svg data-icone="reglages"></svg>
       </button>
     </header>
 
@@ -179,7 +183,7 @@
                  autocomplete="given-name" autocapitalize="words" spellcheck="false">
           <div class="boutons-sauvegarde">
             <button type="submit">Enregistrer</button>
-            <button type="button" id="bouton-effacer-prenom">Remettre « Womack »</button>
+            <button type="button" id="bouton-effacer-prenom">Remettre « Alex »</button>
           </div>
           <p id="message-prenom" class="message" role="status" hidden></p>
         </form>
@@ -475,12 +479,6 @@
             <!-- Cocktail : « Pour 1 verre » -->
             <p id="fiche-pour" class="t-italique fiche-pour" hidden></p>
           </div>
-          <span id="fiche-compteur" class="pilule pilule-neutre" aria-live="polite"></span>
-        </div>
-        <!-- Cocktail : bascule CL / OZ (choix gardé sur l'appareil) -->
-        <div id="fiche-unites" class="bascule" role="group" aria-label="Unité des dosages" hidden>
-          <button type="button" class="bascule-choix" data-unite="cl" aria-pressed="true">cl</button>
-          <button type="button" class="bascule-choix" data-unite="oz" aria-pressed="false">oz</button>
         </div>
         <ul id="fiche-ingredients" class="fiche-ingredients"></ul>
       </section>

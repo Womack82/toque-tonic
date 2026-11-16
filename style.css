@@ -103,8 +103,12 @@ button, input, select, textarea, .etiquette, .badge {
   padding-top: max(var(--space-6), calc(env(safe-area-inset-top) + var(--space-2)));
   margin-bottom: var(--space-6);
 }
+/* « Bonjour Alex » précédé de l'icône de l'app (v1.14) */
+.entete-salut { display: flex; align-items: center; gap: var(--space-3); min-width: 0; }
+.entete-icone { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-card); }
 .entete-marque {
   margin: 0;
+  overflow-wrap: anywhere;
   font: var(--text-card-title);
   font-size: 24px;
   line-height: 32px;
@@ -1169,6 +1173,8 @@ form.edition .message { margin: 4px 0 0; }
   border-bottom: 1.5px dotted var(--dotted);
 }
 .ingredient-quantite { flex-shrink: 0; max-width: 45%; color: var(--primary); text-align: right; }
+/* Recette : la dose au début de la ligne (« 300 g de champignons ») */
+.ingredient-dose { color: var(--primary); }
 /* Ingrédient prêt : barré et pâli */
 .ingredient.coche { background: var(--surface-low); box-shadow: none; }
 .ingredient.coche .ingredient-nom,

@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.13";
+const VERSION = "v1.14";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -235,9 +235,9 @@ function allerA(page) {
 }
 
 // Prénom : gardé sur l'appareil (Réglages → Prénom, rubrique cachée depuis
-// la v1.5 : l'accueil ne l'affiche plus), « Womack » s'il n'a jamais été changé
+// la v1.5 ; affiché dans l'en-tête depuis la v1.14), « Alex » s'il n'a jamais été changé
 const CLE_PRENOM = "toque-tonic-prenom";
-const PRENOM_PAR_DEFAUT = "Womack";
+const PRENOM_PAR_DEFAUT = "Alex";
 function lirePrenom() {
   try {
     return localStorage.getItem(CLE_PRENOM) || PRENOM_PAR_DEFAUT;
@@ -1192,7 +1192,6 @@ const ficheTitreIngredients = document.getElementById("fiche-titre-ingredients")
 const ficheTitreEtapes = document.getElementById("fiche-titre-etapes");
 const ficheTitreNotes = document.getElementById("fiche-titre-notes");
 const fichePour = document.getElementById("fiche-pour");
-const ficheUnites = document.getElementById("fiche-unites");
 const ficheNote = document.getElementById("fiche-note");
 const ficheBlocSource = document.getElementById("fiche-bloc-source");
 const ficheSourceTexte = document.getElementById("fiche-source-texte");
@@ -1200,7 +1199,6 @@ const ficheSource = document.getElementById("fiche-source");
 const ficheBlocPortions = document.getElementById("fiche-bloc-portions");
 const ficheBlocIngredients = document.getElementById("fiche-bloc-ingredients");
 const ficheIngredients = document.getElementById("fiche-ingredients");
-const ficheCompteur = document.getElementById("fiche-compteur");
 const ficheBlocEtapes = document.getElementById("fiche-bloc-etapes");
 const ficheEtapes = document.getElementById("fiche-etapes");
 const ficheVide = document.getElementById("fiche-vide");
@@ -1211,12 +1209,11 @@ const portionsPlus = document.getElementById("portions-plus");
 const portionsRetablir = document.getElementById("portions-retablir");
 const portionsInconnues = document.getElementById("portions-inconnues");
 
-// Fiche affichée (null = fermée), nombre de personnes choisi (null = celui
-// de la recette) et ingrédients cochés (leurs numéros de ligne). Ces choix
-// ne sont pas enregistrés : la fiche repart de zéro à chaque ouverture.
+// Fiche affichée (null = fermée) et nombre de personnes choisi (null = celui
+// de la recette). Ce choix n'est pas enregistré : la fiche repart de zéro
+// à chaque ouverture.
 let idFiche = null;
 let personnesFiche = null;
-let ingredientsCoches = new Set();
 
 // Portions d'origine ; si la fiche ne les donne pas : 4 pour une recette,
 // 1 verre pour un cocktail
@@ -1224,18 +1221,14 @@ const portionsDeBase = (el) => el.portions || (el.type === "cocktail" ? 1 : 4);
 // Un cocktail s'affiche toujours pour 1 verre à l'ouverture
 const portionsAuDepart = (el) => (el.type === "cocktail" ? 1 : portionsDeBase(el));
 
-// Unité des dosages des cocktails : « cl » ou « oz », gardée sur l'appareil
-const CLE_UNITE = "toque-tonic-unite-dosages";
-let uniteDosages = "cl";
-try {
-  if (localStorage.getItem(CLE_UNITE) === "oz") uniteDosages = "oz";
-} catch { /* mémoire indisponible : centilitres */ }
+// Dosages des cocktails : toujours en onces (v1.14 ; la bascule CL / OZ
+// est retirée). Les centilitres et millilitres sont convertis à l'affichage.
+const UNITE_DOSAGES = "oz";
 
 function ouvrirFiche(id) {
   if (!elements.some((e) => e.id === id)) return;
   idFiche = id;
   personnesFiche = null;
-  ingredientsCoches = new Set();
   ficheMessagePhoto.hidden = true;
   afficherFiche();
   verrouillerPage();
@@ -1305,16 +1298,12 @@ function afficherFiche() {
   afficherPhotos(el);
   majBoutonsPhotoFiche(el);
 
-  // 4 métadonnées. Recette : préparation, cuisson, portions, niveau (ligne).
-  // Cocktail : verre, glace, garniture, temps (tuiles 2 × 2), puis méthode
-  // et alcool de base sur une ligne discrète.
+  // Recette : 4 métadonnées (préparation, cuisson, portions, niveau).
+  // Cocktail (v1.14) : plus de tuiles verre, glace, garniture, temps (les
+  // champs restent dans Modifier) ; seulement méthode et alcool de base
+  // sur une ligne discrète.
   const infos = cocktail
-    ? [
-      creerInfo("verre", "Verre", el.verre),
-      creerInfo("glace", "Glace", el.glace),
-      creerInfo("garniture", "Garniture", el.garniture),
-      creerInfo("horloge", "Temps", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
-    ]
+    ? []
     : [
       creerInfo("horloge", "Prép.", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
       creerInfo("flamme", "Cuisson", el.tempsCuisson && formaterDuree(el.tempsCuisson)),
@@ -1322,7 +1311,7 @@ function afficherFiche() {
       creerInfo("niveau", "Niveau", el.niveau && NOMS_NIVEAUX[el.niveau]),
     ];
   ficheInfos.replaceChildren(...infos);
-  ficheInfos.classList.toggle("fiche-tuiles", cocktail);
+  ficheInfos.hidden = cocktail;
   const plus = cocktail
     ? [el.methode && `Méthode : ${el.methode}`, el.alcoolBase && `Alcool de base : ${el.alcoolBase}`].filter(Boolean)
     : [];
@@ -1415,13 +1404,13 @@ ficheFavori.addEventListener("click", () => {
   afficher();
 });
 
-// Photos : la première en grand ; s'il y en a plusieurs, on fait défiler
-// du doigt et les points indiquent laquelle est affichée. Sans photo : le
+// Photo de présentation : une seule, la première (v1.14 : plus de
+// défilement ; les autres restent enregistrées dans la fiche). Sans photo : le
 // cadre pointillé « Ajouter une photo ». Une photo qui ne se charge pas
 // (hors ligne, site qui refuse) laisse voir l'appareil photo du fond.
 function afficherPhotos(el) {
   // La photo gardée (mémoire des photos, « idb:… ») passe en premier
-  const images = [adressePhotoFiche(el), ...(el.images || [])].filter(Boolean);
+  const images = [adressePhotoFiche(el), ...(el.images || [])].filter(Boolean).slice(0, 1);
   fichePhotos.replaceChildren();
   fichePoints.replaceChildren();
   fichePhotos.hidden = images.length === 0;
@@ -1470,8 +1459,9 @@ function majPoints() {
 fichePhotos.addEventListener("scroll", majPoints, { passive: true });
 
 // Ingrédients pour le nombre de personnes choisi. Le texte d'origine n'est
-// jamais modifié : on calcule seulement ce qui est affiché. Chaque ligne :
-// case à cocher, nom, ligne pointillée, quantité (s'il y en a une).
+// jamais modifié : on calcule seulement ce qui est affiché. Pas de case à
+// cocher (v1.14). Recette : dose et ingrédient ensemble (« 300 g de
+// champignons »). Cocktail : nom, ligne pointillée, dosage en onces.
 function afficherIngredients(el) {
   const ingredients = el.ingredients || [];
   ficheBlocIngredients.hidden = ingredients.length === 0;
@@ -1489,13 +1479,9 @@ function afficherIngredients(el) {
   portionsInconnues.hidden = Boolean(el.portions) || cocktail;
   portionsRetablir.hidden = personnes === depart;
   portionsRetablir.textContent = `Revenir à ${depart}`;
-  // Cocktail : « Pour 1 verre » et bascule CL / OZ
+  // Cocktail : « Pour 1 verre »
   fichePour.hidden = !cocktail;
   fichePour.textContent = `Pour ${pluriel(personnes, "verre")}`;
-  ficheUnites.hidden = !cocktail;
-  for (const choix of ficheUnites.children) {
-    choix.setAttribute("aria-pressed", String(choix.dataset.unite === uniteDosages));
-  }
 
   // Fiche créée avec l'IA : la quantité détaillée de la ligne (plus fiable),
   // sinon la quantité lue dans la ligne
@@ -1503,29 +1489,31 @@ function afficherIngredients(el) {
   ficheIngredients.replaceChildren(...ingredients.map((ligne, i) => {
     const separe = separerIngredient(ligne, detail[i], facteur);
     const nom = separe.nom;
-    const quantite = cocktail ? convertirDosage(separe.quantite, uniteDosages) : separe.quantite;
+    const quantite = cocktail ? convertirDosage(separe.quantite, UNITE_DOSAGES) : separe.quantite;
     const li = document.createElement("li");
     li.className = "ingredient";
-    const coche = ingredientsCoches.has(i);
-    li.classList.toggle("coche", coche);
-    const etiquette = document.createElement("label");
+    const etiquette = document.createElement("div");
     etiquette.className = "ingredient-ligne";
-    const caseACocher = document.createElement("input");
-    caseACocher.type = "checkbox";
-    caseACocher.className = "ingredient-case";
-    caseACocher.checked = coche;
-    caseACocher.addEventListener("change", () => {
-      if (caseACocher.checked) ingredientsCoches.add(i); else ingredientsCoches.delete(i);
-      li.classList.toggle("coche", caseACocher.checked);
-      majCompteur(ingredients.length);
-    });
-    const marque = document.createElement("span");
-    marque.className = "ingredient-marque";
-    marque.append(icone("coche"));
+    // Recette : « 300 g » en terracotta, puis « de champignons »
+    if (!cocktail) {
+      const texte = document.createElement("span");
+      texte.className = "ingredient-nom";
+      if (quantite) {
+        const dose = document.createElement("span");
+        dose.className = "t-quantite ingredient-dose";
+        dose.textContent = quantite;
+        texte.append(dose, liaisonIngredient(quantite, nom) + nom);
+      } else {
+        texte.textContent = nom;
+      }
+      etiquette.append(texte);
+      li.append(etiquette);
+      return li;
+    }
     const texteNom = document.createElement("span");
     texteNom.className = "ingredient-nom";
     texteNom.textContent = nom;
-    etiquette.append(caseACocher, marque, texteNom);
+    etiquette.append(texteNom);
     if (quantite) {
       const pointilles = document.createElement("span");
       pointilles.className = "ingredient-pointilles";
@@ -1538,15 +1526,15 @@ function afficherIngredients(el) {
     li.append(etiquette);
     return li;
   }));
-  majCompteur(ingredients.length);
 }
 
-// « 2 SUR 8 PRÊTS »
-function majCompteur(total) {
-  const prets = ingredientsCoches.size;
-  ficheCompteur.textContent = `${prets} sur ${total} ${prets > 1 ? "prêts" : "prêt"}`;
-  ficheCompteur.classList.toggle("pilule-recette", prets > 0 && prets === total);
-  ficheCompteur.classList.toggle("pilule-neutre", !(prets > 0 && prets === total));
+// Ce qui relie la dose au nom : « 300 g » + « de » + « champignons »,
+// « 1 c. à s. » + « d' » + « huile » ; un simple nombre (« 2 œufs ») ou un
+// nom qui commence déjà par « de » : juste une espace.
+function liaisonIngredient(quantite, nom) {
+  const avecUnite = /[a-zA-ZÀ-ÿ.]$/.test(quantite.trim());
+  if (!avecUnite || /^(de|du|des|d')(\s|$)/i.test(nom)) return " ";
+  return /^([aeiouyàâäéèêëîïôöùûüœæ]|h(uile|erbe))/i.test(nom) ? " d'" : " de ";
 }
 
 // Boutons − et + (minimum 1 personne), et « Revenir à … »
@@ -1565,16 +1553,6 @@ portionsRetablir.addEventListener("click", () => {
   personnesFiche = null;
   afficherIngredients(el);
 });
-
-// Bascule CL / OZ des dosages (cocktails)
-for (const choix of ficheUnites.children) {
-  choix.addEventListener("click", () => {
-    uniteDosages = choix.dataset.unite;
-    try { localStorage.setItem(CLE_UNITE, uniteDosages); } catch { /* gardé jusqu'à la fermeture */ }
-    const el = elements.find((e) => e.id === idFiche);
-    if (el) afficherIngredients(el);
-  });
-}
 
 // Crayon : le panneau de modification monte par-dessus la fiche
 // (« Supprimer la fiche » est en bas de ce panneau depuis la v1.7)
@@ -2884,8 +2862,10 @@ function lireCle(nomStockage) {
 
   const afficherPrenom = () => {
     champPrenom.value = lirePrenom();
-    // « Remettre Womack » n'a de sens que si le prénom a été changé
+    // « Remettre Alex » n'a de sens que si le prénom a été changé
     boutonEffacerPrenom.hidden = lirePrenom() === PRENOM_PAR_DEFAUT;
+    // En-tête : « Bonjour Alex » (v1.14)
+    document.getElementById("entete-prenom").textContent = lirePrenom();
   };
 
   formulairePrenom.addEventListener("submit", (evenement) => {
