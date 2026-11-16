@@ -27,4 +27,5 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 - [x] v1.12 — Nouvelles icônes (écran d'accueil, onglet du navigateur, Android) ; fichiers sources SVG ajoutés dans `icons/`
 - [x] v1.13 — Sauvegardes séparées de Wodo : l'import n'accepte plus que les fichiers de Toque&Tonic ; un fichier de Wodo est refusé (« importe-le dans Wodo »), ses notes ne se mélangent plus
 - [x] v1.14 — Retours d'utilisation : une seule photo de présentation sur la fiche (plus de défilement) ; cocktail sans les tuiles Verre, Glace, Garniture, Temps (champs gardés dans Modifier) ; dosages toujours en oz (bascule CL / OZ retirée) ; plus de cases à cocher ni de compteur « prêts » ; recette : dose et ingrédient sur la même ligne (« 300 g de champignons ») ; roue des Réglages à la place du profil ; en-tête : icône de l'app et « Bonjour Alex »
+- [x] v1.15 — Portions : bouton « Revenir à 4 » retiré ; cocktails : dose et ingrédient sur la même ligne, comme les recettes (« 1 ½ oz de gin »)
 - [ ] Refonte : tester sur l'iPhone (mode cuisine, écran allumé, minuteur, photo), puis fusionner la branche « refonte-da » dans « main » pour publier

@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.14";
+const VERSION = "v1.15";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1206,7 +1206,6 @@ const ficheBas = document.getElementById("fiche-bas");
 const portionsTexte = document.getElementById("portions-texte");
 const portionsMoins = document.getElementById("portions-moins");
 const portionsPlus = document.getElementById("portions-plus");
-const portionsRetablir = document.getElementById("portions-retablir");
 const portionsInconnues = document.getElementById("portions-inconnues");
 
 // Fiche affichée (null = fermée) et nombre de personnes choisi (null = celui
@@ -1460,8 +1459,8 @@ fichePhotos.addEventListener("scroll", majPoints, { passive: true });
 
 // Ingrédients pour le nombre de personnes choisi. Le texte d'origine n'est
 // jamais modifié : on calcule seulement ce qui est affiché. Pas de case à
-// cocher (v1.14). Recette : dose et ingrédient ensemble (« 300 g de
-// champignons »). Cocktail : nom, ligne pointillée, dosage en onces.
+// cocher (v1.14). Dose et ingrédient ensemble : « 300 g de champignons »,
+// et pour un cocktail (v1.15) « 1 ½ oz de gin » (dosage en onces).
 function afficherIngredients(el) {
   const ingredients = el.ingredients || [];
   ficheBlocIngredients.hidden = ingredients.length === 0;
@@ -1477,8 +1476,6 @@ function afficherIngredients(el) {
   portionsMoins.disabled = personnes <= 1;
   portionsPlus.disabled = personnes >= LIMITES_FICHE.portionsMax;
   portionsInconnues.hidden = Boolean(el.portions) || cocktail;
-  portionsRetablir.hidden = personnes === depart;
-  portionsRetablir.textContent = `Revenir à ${depart}`;
   // Cocktail : « Pour 1 verre »
   fichePour.hidden = !cocktail;
   fichePour.textContent = `Pour ${pluriel(personnes, "verre")}`;
@@ -1494,35 +1491,18 @@ function afficherIngredients(el) {
     li.className = "ingredient";
     const etiquette = document.createElement("div");
     etiquette.className = "ingredient-ligne";
-    // Recette : « 300 g » en terracotta, puis « de champignons »
-    if (!cocktail) {
-      const texte = document.createElement("span");
-      texte.className = "ingredient-nom";
-      if (quantite) {
-        const dose = document.createElement("span");
-        dose.className = "t-quantite ingredient-dose";
-        dose.textContent = quantite;
-        texte.append(dose, liaisonIngredient(quantite, nom) + nom);
-      } else {
-        texte.textContent = nom;
-      }
-      etiquette.append(texte);
-      li.append(etiquette);
-      return li;
-    }
-    const texteNom = document.createElement("span");
-    texteNom.className = "ingredient-nom";
-    texteNom.textContent = nom;
-    etiquette.append(texteNom);
+    // « 300 g » en terracotta, puis « de champignons »
+    const texte = document.createElement("span");
+    texte.className = "ingredient-nom";
     if (quantite) {
-      const pointilles = document.createElement("span");
-      pointilles.className = "ingredient-pointilles";
-      pointilles.setAttribute("aria-hidden", "true");
-      const texteQuantite = document.createElement("span");
-      texteQuantite.className = "t-quantite ingredient-quantite";
-      texteQuantite.textContent = quantite;
-      etiquette.append(pointilles, texteQuantite);
+      const dose = document.createElement("span");
+      dose.className = "t-quantite ingredient-dose";
+      dose.textContent = quantite;
+      texte.append(dose, liaisonIngredient(quantite, nom) + nom);
+    } else {
+      texte.textContent = nom;
     }
+    etiquette.append(texte);
     li.append(etiquette);
     return li;
   }));
@@ -1547,12 +1527,6 @@ function changerPersonnes(ecart) {
 }
 portionsMoins.addEventListener("click", () => changerPersonnes(-1));
 portionsPlus.addEventListener("click", () => changerPersonnes(1));
-portionsRetablir.addEventListener("click", () => {
-  const el = elements.find((e) => e.id === idFiche);
-  if (!el) return;
-  personnesFiche = null;
-  afficherIngredients(el);
-});
 
 // Crayon : le panneau de modification monte par-dessus la fiche
 // (« Supprimer la fiche » est en bas de ce panneau depuis la v1.7)

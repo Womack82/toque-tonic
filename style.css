@@ -1101,17 +1101,6 @@ form.edition .message { margin: 4px 0 0; }
 .fiche-portions-textes { min-width: 0; }
 .fiche-portions-textes .t-libelle { margin: 0; color: var(--ink); }
 .fiche-portions-aide { margin: 2px 0 0; font-size: 14px; line-height: 20px; }
-.fiche-portions-retablir {
-  min-height: 32px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--primary);
-  font: var(--text-label);
-  letter-spacing: var(--tracking-label);
-  text-transform: uppercase;
-  cursor: pointer;
-}
 .selecteur { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
 .selecteur .btn-icone { color: var(--primary); }
 .selecteur .btn-icone:disabled { opacity: 0.4; cursor: default; }
@@ -1142,43 +1131,11 @@ form.edition .message { margin: 4px 0 0; }
   align-items: center;
   gap: var(--space-3);
   min-height: 52px;
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
+  padding: var(--space-2) var(--space-4);
 }
-/* La vraie case à cocher est invisible ; la marque est dessinée à côté */
-.ingredient-case { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
-.ingredient-marque {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-  border: 1.6px solid var(--sage);
-  border-radius: 6px;
-  color: var(--on-primary);
-  transition: background-color var(--duration) var(--easing);
-}
-.ingredient-marque .icone { width: 16px; height: 16px; stroke-width: 2.2; opacity: 0; transition: opacity var(--duration) var(--easing); }
-.ingredient-case:checked + .ingredient-marque { background: var(--sage); }
-.ingredient-case:checked + .ingredient-marque .icone { opacity: 1; }
-.ingredient-case:focus-visible + .ingredient-marque { outline: 2px solid var(--primary); outline-offset: 2px; }
 .ingredient-nom { min-width: 0; overflow-wrap: anywhere; }
-.ingredient-pointilles {
-  flex: 1;
-  min-width: var(--space-4);
-  align-self: flex-end;
-  margin-bottom: 9px;
-  border-bottom: 1.5px dotted var(--dotted);
-}
-.ingredient-quantite { flex-shrink: 0; max-width: 45%; color: var(--primary); text-align: right; }
-/* Recette : la dose au début de la ligne (« 300 g de champignons ») */
+/* La dose au début de la ligne (« 300 g de champignons », « 1 ½ oz de gin ») */
 .ingredient-dose { color: var(--primary); }
-/* Ingrédient prêt : barré et pâli */
-.ingredient.coche { background: var(--surface-low); box-shadow: none; }
-.ingredient.coche .ingredient-nom,
-.ingredient.coche .ingredient-quantite { color: var(--ink-muted); text-decoration: line-through; }
 
 /* Étapes : blocs surfaceLow, numéro dans un rond terracotta */
 .fiche-etapes { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
