@@ -115,168 +115,143 @@ button, input, select, textarea, .etiquette, .badge {
 /* Titre des pages de liste (Recettes, Cocktails, Favoris) et nombre de fiches */
 .compte-categorie { margin: var(--space-1) 0 var(--space-5); }
 
-/* ---------- Accueil : 2 carrés (Recettes, Cocktails) ---------- */
-.carres { display: flex; gap: 8px; }
-.carre {
-  flex: 1;
+/* ---------- Accueil « Mon carnet » ---------- */
+.accueil-titre { margin-top: var(--space-2); }
+.accueil-sous-titre { margin: var(--space-2) 0 var(--space-5); }
+.accueil-recherche { margin-bottom: var(--space-3); }
+
+/* 3 filtres sur toute la largeur, chacun avec son icône dans une pastille */
+.filtres {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-2);
+}
+.filtre {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 48px;
   min-width: 0;
-  height: 96px;
+  padding: 0 var(--space-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  color: var(--ink);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration) var(--easing),
+              border-color var(--duration) var(--easing),
+              color var(--duration) var(--easing);
+}
+.filtre-pastille {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--ink-muted);
+}
+.filtre-pastille .icone { width: 15px; height: 15px; }
+/* Écran étroit (iPhone SE, mini) : libellés un peu moins espacés */
+@media (max-width: 380px) {
+  .filtre { letter-spacing: 0.02em; gap: var(--space-1); }
+}
+/* Très petit écran (320 px) : on garde les libellés, sans les pastilles */
+@media (max-width: 340px) {
+  .filtre-pastille { display: none; }
+}
+.filtre-recette .filtre-pastille { background: var(--sage-tint); color: var(--on-sage-tint); }
+.filtre-cocktail .filtre-pastille { background: var(--amber-tint); color: var(--on-amber-tint); }
+/* Filtre choisi : Tout en terracotta plein ; Recettes et Cocktails
+   prennent la teinte de leur pastille */
+.filtre-tout[aria-pressed="true"] { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.filtre-tout[aria-pressed="true"] .filtre-pastille { background: var(--primary-pressed); color: var(--on-primary); }
+.filtre-recette[aria-pressed="true"] { background: var(--sage-tint); border-color: var(--sage); color: var(--on-sage-tint); }
+.filtre-recette[aria-pressed="true"] .filtre-pastille { background: var(--sage); color: var(--on-primary); }
+.filtre-cocktail[aria-pressed="true"] { background: var(--amber-tint); border-color: var(--amber); color: var(--on-amber-tint); }
+.filtre-cocktail[aria-pressed="true"] .filtre-pastille { background: var(--amber); color: var(--on-primary); }
+.filtre:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* « Ajoutés récemment » + ordre en italique, bouton TRIER à droite */
+.section-entete {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: var(--space-8) 0 var(--space-4);
+}
+.section-sous-titre { margin: 0; font-size: 15px; line-height: 22px; }
+.section-entete .btn-texte { flex-shrink: 0; margin-right: calc(-1 * var(--space-3)); }
+
+/* ---------- Cartes horizontales des fiches ---------- */
+.liste-cartes {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  padding: 0 2px;
-  border-radius: 30px;
-  color: var(--texte);
-  font: inherit;
-  text-align: center;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.carre-pastille {
+.carte-fiche-corps {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  margin-bottom: 2px;
-  border-radius: 50%;
-  background: var(--bleu-pale);
-  color: var(--bleu);
+  gap: var(--space-4);
+  width: 100%;
+  padding: var(--space-2);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--duration) var(--easing), background-color var(--duration) var(--easing);
 }
-.carre-pastille .icone-svg { width: 16px; height: 16px; }
-.carre-nombre { font-size: 24px; font-weight: 500; line-height: 1.1; }
-.carre-libelle {
+.carte-fiche-corps:active { transform: scale(0.985); background: var(--surface-low); filter: none; }
+.carte-fiche-corps:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.carte-fiche-textes {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-right: var(--space-2);
+}
+.carte-fiche-haut { display: flex; align-items: center; gap: var(--space-2); color: var(--primary); }
+.carte-fiche-titre {
+  overflow-wrap: anywhere;
+  /* 3 lignes au plus, puis « … » */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+}
+.carte-fiche-source {
   max-width: 100%;
-  font-size: 11px;
-  color: var(--gris);
+  font-size: 15px;
+  line-height: 22px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.titre-section { margin: 26px 4px 12px; font-size: 18px; font-weight: 500; }
-
-/* ---------- Cartes de la liste ---------- */
-.liste { list-style: none; padding: 0; margin: 0; }
-
-.carte {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 8px 10px 10px;
-  margin-bottom: 10px;
-  border-radius: 30px;
-  background: var(--verre-fond);
-  border: var(--verre-bord);
-  box-shadow: var(--verre-ombre);
-}
-/* Page catégorie : cartes un peu plus grandes */
-#liste .carte { border-radius: 32px; padding: 12px 8px 12px 12px; }
-/* Fiche (recette, cocktail) : pas de case à droite, un peu plus de marge */
-.carte.fiche,
-#liste .carte.fiche { padding-right: 16px; }
-/* …sauf si l'icône lien (44 px) est au bout */
-.carte.fiche:has(.carte-lien),
-#liste .carte.fiche:has(.carte-lien) { padding-right: 8px; }
-
-/* Partie gauche de la carte : un grand bouton (ouvre le panneau d'actions) */
-.carte-corps {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex: 1;
-  min-width: 0;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--texte);
-  font: inherit;
-  text-align: left;
-}
-.carte-textes { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.carte-titre { font-weight: 700; font-size: 16px; word-break: break-word; }
-.carte-details { font-size: 13px; color: var(--gris); }
-.carte-date { font-size: 12px; font-weight: 600; color: var(--bleu); }
-
-/* Vignette : l'affiche, ou un dégradé marine → bleu avec l'icône orange du type.
-   44 × 62 (accueil, réglages) ; 56 × 80 sur une page catégorie */
+/* Vignette : la photo (104 × 104), ou un cadre pointillé avec un appareil photo */
 .vignette {
-  width: 44px;
-  height: 62px;
+  width: 104px;
+  height: 104px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: calc(var(--radius-card) - 4px);
   object-fit: cover;
   background: var(--surface-high);
 }
-#liste .vignette { width: 56px; height: 80px; border-radius: 20px; }
-.vignette-vide {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--accent-survol);
-}
-.vignette-vide .icone-svg { width: 24px; height: 24px; }
+.vignette.cadre-pointille { border-radius: calc(var(--radius-card) - 4px); background: var(--surface-low); }
 
-/* Case ronde de 26 px à droite. La vraie case à cocher est invisible
-   et couvre toute la zone de 44 px ; le rond est dessiné à côté. */
-.case-ronde {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-}
-.case-ronde input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-.rond {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-  border: 2px solid var(--bleu);
-  background: var(--card);
-  transition: background-color 150ms ease-out, transform 150ms var(--courbe);
-}
-.rond .coche {
-  width: 16px;
-  height: 16px;
-  fill: none;
-  stroke: var(--on-primary);
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: 0;
-  transform: scale(0.4);
-  transition: opacity 150ms ease-out, transform 200ms var(--courbe);
-}
-/* Cocher : le rond se remplit de bleu et la coche grandit */
-.case-ronde input:checked + .rond { background: var(--bleu); }
-.case-ronde input:checked + .rond .coche { opacity: 1; transform: none; }
-.case-ronde:active .rond { transform: scale(0.88); }
-.case-ronde input:focus-visible + .rond { outline: 3px solid var(--bleu); outline-offset: 2px; }
-
-/* Carte qui s'en va (cochée ou décochée) : fondu en glissant un peu à droite.
-   Les autres cartes remontent ensuite en glissant (géré par app.js). */
-.carte.sortie {
-  animation: sortir 220ms var(--courbe) forwards;
-  pointer-events: none;
-}
-@keyframes sortir { to { opacity: 0; transform: translateX(24px) scale(0.97); } }
-
-/* Élément terminé : titre barré et grisé, vignette pâlie */
-.carte.fait .carte-titre { text-decoration: line-through; color: var(--gris); }
-.carte.fait .vignette { opacity: 0.5; }
+.liste-vide { margin: var(--space-6) 0; text-align: center; }
 
 .aide { color: var(--gris); }
 .aide.vide { text-align: center; padding: 16px 0; }
@@ -508,7 +483,6 @@ button, input, select, textarea, .etiquette, .badge {
 .chevron { width: 18px; height: 18px; color: var(--gris); }
 
 /* Listes dans les panneaux : cartes blanches, sans ombre */
-.panneau .carte { background: var(--card); box-shadow: none; }
 .panneau .mentions { margin-top: 14px; }
 
 /* Panneau d'actions : titre de l'élément puis grands boutons */
@@ -614,7 +588,6 @@ button:active,
   transform: scale(0.96);
   filter: brightness(0.94);
 }
-.carte-corps:active,
 .ligne-reglage:active { transform: scale(0.985); filter: brightness(0.97); }
 /* Boutons orange appuyés : orange plus clair */
 .bouton-ajout-ligne:active,
@@ -896,21 +869,6 @@ form.edition textarea {
 }
 .bouton-contour.mise-en-avant:active { background: var(--accent-survol); border-color: var(--accent-survol); }
 #message-import { margin: 0; }
-
-/* Sur la carte : icône lien de 44 px (zone d'appui), entre le texte et la case */
-.carte-lien {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 50%;
-  color: var(--bleu);
-  -webkit-tap-highlight-color: transparent;
-}
-.carte-lien .icone-svg { width: 20px; height: 20px; }
-.carte-lien:active { background: var(--bleu-pale); }
 
 /* Panneau d'actions : note de la recette sous le titre */
 .actions-note {
@@ -1606,7 +1564,6 @@ form.edition .ia-photo-choix input {
 @media (prefers-reduced-transparency: reduce) {
   .verre,
   .verre-flou,
-  .carte,
   .panneau,
   .menu-carte,
   .fiche-retour,
@@ -1631,9 +1588,8 @@ form.edition .ia-photo-choix input {
   }
   button:active,
   .bouton-action:active,
-  .carte-corps:active,
   .ligne-reglage:active,
-  .case-ronde:active .rond { transform: none; }
+  .carte-fiche-corps:active { transform: none; }
   /* La roue de chargement ne tourne plus : le texte « Analyse en cours… » suffit */
   .ia-roue { animation: none; border-color: var(--accent); }
 }

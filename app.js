@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.5";
+const VERSION = "v1.6";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -71,7 +71,10 @@ const titreCategorie = document.getElementById("titre-categorie");
 const compteCategorie = document.getElementById("compte-categorie");
 const pageAccueil = document.getElementById("page-accueil");
 const pageCategorie = document.getElementById("page-categorie");
-const carres = document.querySelectorAll(".carre");
+const champRecherche = document.getElementById("champ-recherche");
+const boutonsFiltre = document.querySelectorAll(".filtre");
+const boutonTrier = document.getElementById("bouton-trier");
+const texteTri = document.getElementById("texte-tri");
 const listeRecents = document.getElementById("liste-recents");
 const recentsVide = document.getElementById("recents-vide");
 const liste = document.getElementById("liste");
@@ -107,44 +110,75 @@ function dateAjout(el) {
   return Number.isFinite(temps) && temps > 1e12 ? new Date(temps) : null;
 }
 
-// « Ajouté aujourd'hui », « Ajouté hier », « Ajouté il y a 5 jours »
-function texteAjout(el) {
-  const date = dateAjout(el);
-  if (!date) return "";
-  const minuit = (d) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
-  const jours = Math.round((minuit(new Date()) - minuit(date)) / 86400000);
-  if (jours <= 0) return "Ajouté aujourd'hui";
-  if (jours === 1) return "Ajouté hier";
-  return `Ajouté il y a ${jours} jours`;
+// --- 3. Afficher les pages et les listes ----------------------
+// Accueil : recherche, filtre (Tout, Recettes, Cocktails) et tri.
+// Pages Recettes, Cocktails, Favoris : les fiches de la page, même ordre.
+
+// Choix de l'accueil : filtre et texte cherché (oubliés à la fermeture),
+// ordre de tri (gardé sur l'appareil)
+let filtreAccueil = "tout";
+let texteCherche = "";
+const CLE_TRI = "toque-tonic-tri";
+const TRIS = {
+  recent: { texte: "Du plus récent au plus ancien", comparer: (a, b) => (Number(b.id) || 0) - (Number(a.id) || 0) },
+  ancien: { texte: "Du plus ancien au plus récent", comparer: (a, b) => (Number(a.id) || 0) - (Number(b.id) || 0) },
+  alpha: { texte: "De A à Z", comparer: (a, b) => a.titre.localeCompare(b.titre, "fr", { sensitivity: "base" }) },
+};
+let tri = "recent";
+try {
+  if (TRIS[localStorage.getItem(CLE_TRI)]) tri = localStorage.getItem(CLE_TRI);
+} catch { /* mémoire indisponible : ordre par défaut */ }
+
+// Texte simplifié pour chercher : minuscules, sans accents (« crème » = « creme »)
+const simplifier = (texte) => String(texte).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+// Source affichée sous le titre : le texte saisi, sinon le site du lien
+function texteSource(el) {
+  if (el.source) return el.source;
+  if (el.lien) {
+    try { return domaine(el.lien); } catch { return ""; }
+  }
+  return "";
 }
 
-// --- 3. Afficher les pages et les listes ----------------------
-// Accueil : 2 carrés (nombre de fiches) + 4 derniers ajoutés.
-// Page catégorie : toutes les fiches de cette catégorie.
+// La fiche contient-elle le texte cherché ? (titre, ingrédients, source)
+function correspond(el, cherche) {
+  if (!cherche) return true;
+  const lieux = [el.titre, texteSource(el), ...(el.ingredients || [])];
+  return lieux.some((texte) => simplifier(texte).includes(cherche));
+}
+
 // animer = true : les cartes apparaissent en fondu, l'une après l'autre
 // (seulement en arrivant sur une page).
 function afficher(animer = false) {
-  // Carrés de l'accueil
-  for (const carre of carres) {
-    carre.querySelector(".carre-nombre").textContent =
-      elements.filter((el) => el.type === carre.dataset.type).length;
+  const fiches = elements.filter((el) => estFiche(el.type)).sort(TRIS[tri].comparer);
+  texteTri.textContent = TRIS[tri].texte;
+
+  // Accueil : filtre + recherche
+  const cherche = simplifier(texteCherche.trim());
+  const visiblesAccueil = fiches.filter((el) =>
+    (filtreAccueil === "tout" || el.type === filtreAccueil) && correspond(el, cherche));
+  listeRecents.replaceChildren(...visiblesAccueil.map(creerCarte));
+  recentsVide.hidden = visiblesAccueil.length > 0;
+  if (fiches.length === 0) {
+    recentsVide.textContent = "Ton carnet est encore vide. Appuie sur + pour ajouter ta première recette ou ton premier cocktail.";
+  } else if (cherche) {
+    recentsVide.textContent = `Rien ne correspond à « ${texteCherche.trim()} ».`;
+  } else {
+    recentsVide.textContent = filtreAccueil === "cocktail" ? "Aucun cocktail pour l'instant." : "Aucune recette pour l'instant.";
+  }
+  for (const bouton of boutonsFiltre) {
+    bouton.setAttribute("aria-pressed", String(bouton.dataset.filtre === filtreAccueil));
   }
 
-  // Derniers ajoutés, du plus récent au plus ancien
-  const recents = elements.filter((el) => estFiche(el.type))
-    .sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0))
-    .slice(0, 4);
-  listeRecents.replaceChildren(...recents.map((el) => creerCarte(el, true)));
-  recentsVide.hidden = recents.length > 0;
-
-  // Page catégorie
+  // Page Recettes, Cocktails ou Favoris
   liste.innerHTML = "";
   if (pageActive !== "accueil") {
     // Favoris : les fiches marquées d'un signet ; sinon, un type
     const visibles = pageActive === "favoris"
-      ? elements.filter((el) => estFiche(el.type) && el.favori)
-      : elements.filter((el) => el.type === pageActive);
-    for (const el of visibles) liste.append(creerCarte(el));
+      ? fiches.filter((el) => el.favori)
+      : fiches.filter((el) => el.type === pageActive);
+    liste.append(...visibles.map(creerCarte));
     messageVide.textContent = pageActive === "favoris"
       ? "Aucun favori pour l'instant. Touche le signet d'une fiche pour la retrouver ici."
       : "Rien ici pour l'instant. Appuie sur + pour ajouter.";
@@ -153,9 +187,7 @@ function afficher(animer = false) {
   }
 
   if (animer && !sansAnimation.matches) {
-    const blocs = pageActive === "accueil"
-      ? [...carres, ...listeRecents.children]
-      : [...liste.children];
+    const blocs = pageActive === "accueil" ? [...listeRecents.children] : [...liste.children];
     blocs.forEach((bloc, rang) => {
       bloc.style.setProperty("--rang", Math.min(rang, 8));
       bloc.classList.remove("apparition");
@@ -164,6 +196,26 @@ function afficher(animer = false) {
     });
   }
 }
+
+// Recherche : la liste se met à jour à chaque lettre
+champRecherche.addEventListener("input", () => {
+  texteCherche = champRecherche.value;
+  afficher();
+});
+// Filtres Tout, Recettes, Cocktails
+for (const bouton of boutonsFiltre) {
+  bouton.addEventListener("click", () => {
+    filtreAccueil = bouton.dataset.filtre;
+    afficher(true);
+  });
+}
+// Trier : plus récent → plus ancien → A à Z → plus récent…
+boutonTrier.addEventListener("click", () => {
+  const ordres = Object.keys(TRIS);
+  tri = ordres[(ordres.indexOf(tri) + 1) % ordres.length];
+  try { localStorage.setItem(CLE_TRI, tri); } catch { /* gardé jusqu'à la fermeture */ }
+  afficher(true);
+});
 
 // Change de page : "accueil", une catégorie ("recette", "cocktail")
 // ou "favoris"
@@ -198,80 +250,54 @@ function lirePrenom() {
 }
 
 
-// Fabrique la carte <li> d'un élément :
-// vignette + titre + type/année (+ date d'ajout sur l'accueil) ; un appui
-// ouvre le panneau d'actions. À droite, une case ronde pour cocher
-// (sauf pour les fiches : recettes et cocktails).
-function creerCarte(el, avecDate = false) {
-  const fiche = estFiche(el.type);
+// Fabrique la carte <li> d'une fiche (carte horizontale) :
+// à gauche, la photo (104 px) ; à droite, le badge RECETTE ou COCKTAIL,
+// le titre et la source en italique. Un appui ouvre la fiche.
+function creerCarte(el) {
   const li = document.createElement("li");
-  li.className = fiche ? "carte fiche" : "carte";
-  li.dataset.id = el.id; // pour retrouver la carte et la faire glisser (animations)
-  if (el.fait) li.classList.add("fait");
+  li.className = "carte-fiche";
+  li.dataset.id = el.id; // pour retrouver la carte (animations)
 
-  // Toute la partie gauche est un bouton : il ouvre le panneau d'actions
-  // (ou, pour une recette ou un cocktail, la page de la fiche)
+  // Toute la carte est un bouton
   const corps = document.createElement("button");
   corps.type = "button";
-  corps.className = "carte-corps";
-  corps.addEventListener("click", () => (fiche ? ouvrirFiche(el.id) : ouvrirActions(el.id)));
+  corps.className = "carte-fiche-corps carte-papier";
+  corps.addEventListener("click", () => ouvrirFiche(el.id));
 
-  // Titre en gras (textContent empêche d'injecter du code HTML par erreur)
-  const titre = document.createElement("span");
-  titre.className = "carte-titre";
-  titre.textContent = el.titre;
-
-  // Ligne grise : type, et année si elle existe
-  const details = document.createElement("span");
-  details.className = "carte-details";
-  details.textContent = el.annee ? `${NOMS_SIMPLES[el.type]} · ${el.annee}` : NOMS_SIMPLES[el.type];
+  // Vignette : la première photo de la fiche (la photo gardée en priorité)
+  const photo = adressePhotoFiche(el) || (el.images ? el.images[0] : null);
 
   const textes = document.createElement("span");
-  textes.className = "carte-textes";
-  textes.append(titre, details);
-
-  // « Ajouté hier » (en bleu), sur l'accueil seulement
-  const quand = avecDate ? texteAjout(el) : "";
-  if (quand) {
-    const date = document.createElement("span");
-    date.className = "carte-date";
-    date.textContent = quand;
-    textes.append(date);
+  textes.className = "carte-fiche-textes";
+  const haut = document.createElement("span");
+  haut.className = "carte-fiche-haut";
+  const badge = document.createElement("span");
+  badge.className = `pilule pilule-${el.type}`;
+  badge.textContent = NOMS_SIMPLES[el.type];
+  haut.append(badge);
+  // Favori : petit signet plein à côté du badge
+  if (el.favori) {
+    const signet = icone("signet", "plein petite");
+    signet.setAttribute("aria-hidden", "false");
+    signet.setAttribute("role", "img");
+    signet.setAttribute("aria-label", "Favori");
+    haut.append(signet);
   }
-  // Vignette : la première photo de la fiche
-  // (la photo gardée avec l'IA en priorité)
-  const photoFiche = fiche ? adressePhotoFiche(el) || (el.images ? el.images[0] : null) : null;
-  corps.append(creerVignette(el.affiche || photoFiche, el.type), textes);
+  // Titre et source : textContent empêche d'injecter du code HTML par erreur
+  const titre = document.createElement("span");
+  titre.className = "t-carte carte-fiche-titre";
+  titre.textContent = el.titre;
+  textes.append(haut, titre);
+  const source = texteSource(el);
+  if (source) {
+    const ligne = document.createElement("span");
+    ligne.className = "t-italique carte-fiche-source";
+    ligne.textContent = source;
+    textes.append(ligne);
+  }
 
-  // Case ronde : une vraie case à cocher, cachée, et un rond dessiné à côté.
-  // Le <label> autour fait 44 px pour que le doigt ne la rate pas.
-  const zone = document.createElement("label");
-  zone.className = "case-ronde";
-  const caseACocher = document.createElement("input");
-  caseACocher.type = "checkbox";
-  caseACocher.checked = el.fait;
-  caseACocher.setAttribute("aria-label", el.fait ? `Remettre à faire : ${el.titre}` : `Marquer comme terminé : ${el.titre}`);
-  caseACocher.addEventListener("change", () => basculer(el.id, li));
-  const rond = document.createElement("span");
-  rond.className = "rond";
-  rond.append(creerIcone("M6 12.5l4 4 8-9", "coche"));
-  zone.append(caseACocher, rond);
-
+  corps.append(creerVignette(photo, el.type), textes);
   li.append(corps);
-  // Fiche avec un lien : petite icône qui ouvre l'adresse dans un nouvel
-  // onglet (noopener : la page ouverte ne peut pas agir sur l'app)
-  if (fiche && el.lien) {
-    const lien = document.createElement("a");
-    lien.className = "carte-lien";
-    lien.href = el.lien;
-    lien.target = "_blank";
-    lien.rel = "noopener";
-    lien.setAttribute("aria-label", `Ouvrir le lien : ${el.titre}`);
-    lien.append(creerIcone("M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1.2 1.2 M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1.2-1.2"));
-    li.append(lien);
-  }
-  // Pas de case à cocher pour une fiche
-  if (!fiche) li.append(zone);
   return li;
 }
 
@@ -353,11 +379,11 @@ function basculer(id, carte = null) {
 function afficherEnDouceur() {
   const cle = (carte) => `${carte.parentElement.id}/${carte.dataset.id}`;
   const avant = new Map();
-  for (const carte of document.querySelectorAll(".carte[data-id]")) {
+  for (const carte of document.querySelectorAll(".carte-fiche[data-id]")) {
     avant.set(cle(carte), carte.getBoundingClientRect().top);
   }
   afficher();
-  for (const carte of document.querySelectorAll(".carte[data-id]")) {
+  for (const carte of document.querySelectorAll(".carte-fiche[data-id]")) {
     const ancienHaut = avant.get(cle(carte));
     if (ancienHaut === undefined) continue; // carte nouvelle dans cette liste
     const ecart = ancienHaut - carte.getBoundingClientRect().top;
@@ -685,10 +711,6 @@ document.getElementById("reglages-fermer").addEventListener("click", fermerRegla
 fermerSurVoile(panneauReglages, fermerReglages);
 
 // --- 4 quater bis. Navigation : accueil, catégories, favoris ----------
-for (const carre of carres) {
-  carre.querySelector(".carre-pastille").append(creerIcone(ICONES_TYPES[carre.dataset.type]));
-  carre.addEventListener("click", () => allerA(carre.dataset.type));
-}
 for (const onglet of onglets) {
   onglet.addEventListener("click", () => allerA(onglet.dataset.page));
 }
@@ -2450,13 +2472,13 @@ function lireCle(nomStockage) {
 }
 
 // --- 8. Les vignettes des cartes ---------------------------------
-// Fabrique la vignette d'une fiche : sa photo, ou un carré bleu marine
-// avec l'icône orange du type s'il n'y a pas de photo ou si elle ne se
-// charge pas (hors ligne)
+// Fabrique la vignette d'une fiche : sa photo, ou un cadre pointillé avec
+// un appareil photo quand il n'y a pas de photo ou qu'elle ne se charge
+// pas (hors ligne)
 function creerVignette(affiche, type) {
   const vide = document.createElement("span");
-  vide.className = "vignette vignette-vide";
-  vide.append(creerIcone(ICONES_TYPES[type]));
+  vide.className = "vignette cadre-pointille";
+  vide.append(icone("appareil"));
   if (!affiche) return vide;
 
   const image = document.createElement("img");

@@ -34,29 +34,53 @@
       </button>
     </header>
 
-    <!-- Page d'accueil -->
+    <!-- Page d'accueil : « Mon carnet » -->
     <section id="page-accueil">
-      <!-- 2 carrés : nombre de fiches (Recettes, Cocktails) ; un appui ouvre la page -->
-      <div class="carres">
-        <button type="button" class="carre verre" data-type="recette">
-          <span class="carre-pastille"></span><span class="carre-nombre">0</span><span class="carre-libelle">Recettes</span>
+      <p class="surtitre">Mon carnet</p>
+      <h1 class="t-ecran accueil-titre">Ce que j'ai goûté</h1>
+      <p class="t-italique accueil-sous-titre">Les plats et les verres que tu ne veux pas oublier.</p>
+
+      <!-- Recherche : titre, ingrédient ou source -->
+      <label class="recherche accueil-recherche">
+        <svg data-icone="recherche"></svg>
+        <input id="champ-recherche" type="search" enterkeyhint="search" autocomplete="off"
+               autocorrect="off" spellcheck="false" aria-label="Rechercher dans le carnet"
+               placeholder="Titre, ingrédient, source…">
+      </label>
+
+      <!-- 3 filtres ; aria-pressed indique celui qui est choisi -->
+      <div class="filtres" role="group" aria-label="Afficher">
+        <button type="button" class="filtre filtre-tout" data-filtre="tout" aria-pressed="true">
+          <span class="filtre-pastille"><svg data-icone="grille"></svg></span>Tout
         </button>
-        <button type="button" class="carre verre" data-type="cocktail">
-          <span class="carre-pastille"></span><span class="carre-nombre">0</span><span class="carre-libelle">Cocktails</span>
+        <button type="button" class="filtre filtre-recette" data-filtre="recette" aria-pressed="false">
+          <span class="filtre-pastille"><svg data-icone="toque"></svg></span>Recettes
+        </button>
+        <button type="button" class="filtre filtre-cocktail" data-filtre="cocktail" aria-pressed="false">
+          <span class="filtre-pastille"><svg data-icone="coupe"></svg></span>Cocktails
         </button>
       </div>
 
-      <h2 class="titre-section">Derniers ajoutés</h2>
-      <ul id="liste-recents" class="liste"></ul>
-      <p id="recents-vide" class="aide vide" hidden>Aucune fiche pour l'instant. Appuie sur + pour ajouter.</p>
+      <div class="section-entete">
+        <div>
+          <h2 class="t-section">Ajoutés récemment</h2>
+          <p id="texte-tri" class="t-italique section-sous-titre">Du plus récent au plus ancien</p>
+        </div>
+        <!-- Trier : chaque appui passe à l'ordre suivant -->
+        <button type="button" id="bouton-trier" class="btn btn-texte" aria-describedby="texte-tri">
+          <svg data-icone="trier"></svg>Trier
+        </button>
+      </div>
+      <ul id="liste-recents" class="liste-cartes"></ul>
+      <p id="recents-vide" class="t-italique liste-vide" hidden></p>
     </section>
 
     <!-- Page d'une liste : Recettes, Cocktails ou Favoris -->
     <section id="page-categorie" hidden>
       <h1 id="titre-categorie" class="t-ecran"></h1>
       <p id="compte-categorie" class="t-italique compte-categorie"></p>
-      <ul id="liste" class="liste"></ul>
-      <p id="message-vide" class="aide vide" hidden></p>
+      <ul id="liste" class="liste-cartes"></ul>
+      <p id="message-vide" class="t-italique liste-vide" hidden></p>
 
     </section>
   </main>
