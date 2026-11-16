@@ -1907,6 +1907,173 @@ form.edition .ia-photo-choix input {
 .mentions p { margin: 6px 0 0; }
 .mentions p a { color: inherit; text-decoration: underline; }
 
+/* ---------- Harmonisation (refonte, v1.11) ----------
+   Les écrans hérités de Wodo (saisie du +, « Photos et texte », Réglages,
+   fenêtre d'import) prennent les formes de la nouvelle DA : rayons de 8 et
+   12 px, libellés en capitales Hanken Grotesk, champs sur fond « surface ».
+   Placé après leurs règles d'origine : ces règles-ci l'emportent. */
+
+/* Boutons ronds (retour, fermer) : comme .btn-icone */
+.bouton-rond,
+.bouton-verre-rond,
+.fiche-retour {
+  width: var(--touch);
+  height: var(--touch);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  box-shadow: none;
+  color: var(--ink);
+}
+.bouton-rond .icone-svg,
+.bouton-verre-rond .icone-svg,
+.fiche-retour .icone-svg { stroke-width: 1.6; }
+
+/* Boutons des panneaux : rayon 8, capitales */
+.bouton-action,
+.bouton-contour,
+.bouton-ajout-ligne,
+.boutons-sauvegarde button,
+.boutons-fenetre button {
+  min-height: 48px;
+  border-radius: var(--radius-button);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.ia-gros { min-height: 56px; border-radius: var(--radius-button); font-size: 14px; }
+.ia-boutons .bouton-contour { border-radius: var(--radius-button); font-size: 12px; }
+/* Principal : terracotta plein */
+.bouton-ajout-ligne,
+.bouton-action.principal,
+.boutons-fenetre #bouton-sauver-avant,
+.boutons-sauvegarde button[type="submit"],
+.boutons-sauvegarde #bouton-exporter,
+.boutons-sauvegarde #bouton-importer {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+/* Secondaire et contour : contour sauge */
+.bouton-contour,
+.bouton-action.secondaire,
+.boutons-sauvegarde button[type="button"]:not(#bouton-exporter):not(#bouton-importer),
+.boutons-fenetre .secondaire {
+  border: 1px solid var(--sage);
+  background: none;
+  color: var(--sage);
+}
+.bouton-contour .icone-svg { color: var(--sage); stroke-width: 1.6; }
+.bouton-contour.mise-en-avant { border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.bouton-action.supprimer,
+.boutons-fenetre .danger { border: 1px solid var(--error); background: none; color: var(--error); }
+.bouton-action.supprimer.confirmer,
+.boutons-fenetre .danger:active { background: var(--error); color: var(--on-primary); }
+
+/* Champs : fond surface, rayon 8, texte 17 px, indication en italique */
+#champ-titre,
+#champ-lien,
+#champ-note,
+.champ-reglage,
+form.edition input,
+form.edition select,
+form.edition textarea,
+.page-ia textarea,
+.page-ia input[type="url"],
+#ia-texte,
+#ia-lien {
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  background: var(--surface);
+  box-shadow: var(--shadow-inset);
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: 17px;
+}
+#champ-titre::placeholder,
+#champ-lien::placeholder,
+#champ-note::placeholder,
+.champ-reglage::placeholder,
+form.edition input::placeholder,
+form.edition textarea::placeholder,
+.page-ia textarea::placeholder,
+.page-ia input::placeholder,
+#ia-texte::placeholder,
+#ia-lien::placeholder { color: var(--ink-muted); font-style: italic; opacity: 1; }
+#champ-titre:focus,
+#champ-lien:focus,
+#champ-note:focus,
+.champ-reglage:focus,
+form.edition input:focus,
+form.edition select:focus,
+form.edition textarea:focus,
+.page-ia textarea:focus,
+.page-ia input:focus,
+#ia-texte:focus,
+#ia-lien:focus { outline: none; border-color: var(--primary); box-shadow: none; }
+form.edition .ia-case input,
+form.edition .ia-photo-choix input { min-height: 0; box-shadow: none; }
+
+/* Libellés des champs : capitales espacées */
+.etiquette {
+  color: var(--ink-muted);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+
+/* Messages : rayon 8 */
+.message { border-radius: var(--radius-button); font-size: 15px; line-height: 22px; }
+
+/* Panneaux (Réglages, saisie du +) et fenêtre d'import : coins de 20 px */
+.panneau { border-radius: 0 0 20px 20px; }
+.feuille { border-radius: 20px 20px 0 0; }
+#fenetre-import { border-radius: var(--radius-card); }
+.panneau-entete h2,
+.feuille-entete h2 { font: var(--text-card-title); }
+.version { font: var(--text-label-small); letter-spacing: var(--tracking-label-small); }
+.feuille-icone { color: var(--primary); }
+.feuille-icone .icone-svg { stroke-width: 1.6; }
+
+/* Réglages : lignes en cartes de 12 px, icône dans une pastille sauge */
+.ligne-reglage { border-radius: var(--radius-card); }
+.ligne-icone { background: var(--sage-tint); color: var(--on-sage-tint); }
+.ligne-icone .icone-svg { stroke-width: 1.6; }
+.ligne-titre { font: var(--text-card-title); font-size: 18px; }
+.ligne-sous-titre { font-style: italic; font-size: 15px; color: var(--ink-muted); }
+.badge { font: var(--text-label-small); letter-spacing: var(--tracking-label-small); }
+
+/* Choix Recette / Cocktail du + : pastilles sauge et ambre */
+.choix-menu { width: 92px; font: var(--text-label); letter-spacing: var(--tracking-label); text-transform: uppercase; }
+.menu-carte { gap: var(--space-2); padding: var(--space-4) var(--space-3); }
+.choix-menu[data-type="recette"] .rond-menu { background: var(--sage-tint); color: var(--on-sage-tint); }
+.choix-menu[data-type="cocktail"] .rond-menu { background: var(--amber-tint); color: var(--on-amber-tint); }
+.rond-menu .icone-svg { stroke-width: 1.6; }
+.menu-carte { border-radius: var(--radius-card); border: 1px solid var(--line); }
+
+/* « Photos et texte » : blocs en cartes de 12 px, titre sans pilule */
+.fiche-bloc.verre { border-radius: var(--radius-card); }
+.fiche-bloc h3 { font: var(--text-card-title); }
+.ia-titre {
+  padding: 0;
+  border: none;
+  background: none;
+  box-shadow: none;
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.ia-compte { font: var(--text-label-small); letter-spacing: var(--tracking-label-small); text-transform: uppercase; }
+.ia-avis { font-style: italic; }
+.ia-avertissements { border-radius: var(--radius-card); }
+.ia-miniature,
+.ia-photo-choix { border-radius: var(--radius-button); }
+.ia-roue { border-color: var(--primary-tint); border-top-color: var(--primary); }
+#ia-texte { padding: var(--space-3); }
+#ia-lien { padding: 0 var(--space-3); }
+
 /* ---------- Replis ---------- */
 
 /* « Réduire la transparence » activé sur l'iPhone (Accessibilité) :

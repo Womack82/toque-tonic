@@ -69,18 +69,18 @@ class ErreurIa extends Error {
   }
 }
 
-const MESSAGE_ILLISIBLE = "Je n'ai pas réussi à lire cette recette, réessayez avec des photos plus nettes.";
+const MESSAGE_ILLISIBLE = "Je n'ai pas réussi à lire cette recette, réessaie avec des photos plus nettes.";
 const MESSAGES_IA = {
-  "pas-de-cle": "Ajoutez d'abord votre clé Gemini dans Réglages → IA (Gemini).",
-  cle: "Gemini refuse la clé enregistrée. Vérifiez-la dans Réglages → IA (Gemini).",
-  quota: "Limite d'utilisation de Gemini atteinte (quota). Réessayez dans un moment ou demain.",
+  "pas-de-cle": "Ajoute d'abord ta clé Gemini dans Réglages → IA (Gemini).",
+  cle: "Gemini refuse la clé enregistrée. Vérifie-la dans Réglages → IA (Gemini).",
+  quota: "Limite d'utilisation de Gemini atteinte (quota). Réessaie dans un moment ou demain.",
   modele: "Le modèle Gemini choisi n'existe pas (ou plus). Changez-le dans Réglages → IA (Gemini).",
   region: "Gemini refuse la demande avec cette clé (offre non disponible pour ce compte ou ce pays).",
-  surcharge: "Gemini est surchargé pour le moment. Réessayez dans quelques instants.",
-  reseau: "Impossible de joindre Gemini. Vérifiez la connexion internet.",
-  delai: "Gemini n'a pas répondu dans les 45 secondes. Réessayez, peut-être avec moins de photos.",
+  surcharge: "Gemini est surchargé pour le moment. Réessaie dans quelques instants.",
+  reseau: "Impossible de joindre Gemini. Vérifie la connexion internet.",
+  delai: "Gemini n'a pas répondu dans les 45 secondes. Réessaie, peut-être avec moins de photos.",
   annule: "Analyse annulée. Rien n'a été perdu.",
-  requete: "Gemini n'a pas accepté la demande. Essayez avec d'autres photos ou un texte plus court.",
+  requete: "Gemini n'a pas accepté la demande. Essaie avec d'autres photos ou un texte plus court.",
   image: "Impossible de lire cette image sur cet appareil (format non pris en charge).",
   illisible: MESSAGE_ILLISIBLE,
 };

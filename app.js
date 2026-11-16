@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.10";
+const VERSION = "v1.11";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1011,6 +1011,9 @@ function ajouterTelQuel() {
   }
   ajouter(titre, type, infos);
   fermerAjout();
+  // La nouvelle fiche s'ouvre (comme après « Photos et texte ») : le crayon
+  // permet de la compléter (photo, ingrédients, étapes…)
+  ouvrirFiche(elements[elements.length - 1].id);
 }
 
 // --- Recette : message sous le lien ---
@@ -1054,7 +1057,7 @@ champLien.addEventListener("change", () => {
 });
 
 // --- Recette, cocktail : « Importer depuis le lien » ---
-// 1. l'app demande la page au relais (Réglages → Import de recettes) ;
+// 1. l'app demande la page au relais (Réglages → Relais) ;
 // 2. recettes.js cherche le bloc JSON-LD « Recipe » dans le HTML ;
 // 3. le titre est rempli et un résumé s'affiche ; rien n'est enregistré
 //    tant qu'on n'a pas touché « Ajouter ».
@@ -1063,7 +1066,7 @@ champLien.addEventListener("change", () => {
 const CLE_RELAIS = "toque-tonic-relais";
 const DELAI_IMPORT = 12000; // 12 s : le relais abandonne lui-même au bout de 8 s
 const TEXTE_BOUTON_IMPORT = "Importer depuis le lien";
-const MESSAGE_PAS_DE_RECETTE = "Je n'ai pas trouvé de recette sur cette page. Vous pouvez l'ajouter à la main.";
+const MESSAGE_PAS_DE_RECETTE = "Je n'ai pas trouvé de recette sur cette page. Tu peux l'ajouter à la main.";
 
 // Ce qu'« Importer » a trouvé, en attendant « Ajouter » : { lien, titre, images, … }
 let recetteImportee = null;
@@ -1081,7 +1084,7 @@ function reinitialiserImport() {
 
 // Import impossible : on montre le message, et « Photos et texte (IA) »
 // passe en orange (l'IA peut lire des captures ou la légende copiée)
-const SUITE_ECHEC_IMPORT = " Essayez aussi « Photos et texte (IA) » avec des captures ou le texte de la recette.";
+const SUITE_ECHEC_IMPORT = " Essaie aussi « Photos et texte (IA) » avec des captures ou le texte de la recette.";
 function echecImport(texte) {
   afficherMessage(texte + SUITE_ECHEC_IMPORT, false, messageImport);
   mettreEnAvant(boutonOuvrirIa);
@@ -1093,13 +1096,13 @@ async function importerDepuisLien() {
   mettreEnAvant(null);
   const lien = lienValide(champLien.value);
   if (!lien) {
-    afficherMessage("Collez d'abord le lien de la page (il doit commencer par http:// ou https://).", false, messageImport);
+    afficherMessage("Colle d'abord le lien de la page (il doit commencer par http:// ou https://).", false, messageImport);
     champLien.focus();
     return;
   }
   const relais = lireCle(CLE_RELAIS);
   if (relais === "") {
-    echecImport("Import impossible : ajoutez l'adresse du relais dans Réglages → Import de recettes. Vous pouvez ajouter la recette à la main.");
+    echecImport("Import impossible : ajoute l'adresse du relais dans Réglages → Relais. Tu peux ajouter la recette à la main.");
     return;
   }
 
@@ -1145,7 +1148,7 @@ async function importerDepuisLien() {
     nbEtapes ? pluriel(nbEtapes, "étape") : "",
     recette.images.length ? pluriel(recette.images.length, "photo") : "",
   ].filter(Boolean).join(", ");
-  afficherMessage(`✓ Recette trouvée${trouve ? ` : ${trouve}` : ""}. Touchez « Ajouter » pour l'enregistrer.`, true, messageImport);
+  afficherMessage(`✓ Recette trouvée${trouve ? ` : ${trouve}` : ""}. Touche « Ajouter » pour l'enregistrer.`, true, messageImport);
 }
 boutonImporterLien.addEventListener("click", importerDepuisLien);
 
@@ -2114,7 +2117,7 @@ iaFichiers.addEventListener("change", async () => {
     }
     if (ouverture !== iaOuverture) return; // page fermée entre-temps
     if (tailleTotaleIa() + reduite.size > LIMITES_IA.tailleTotale) {
-      problemes.push("Taille totale des photos dépassée (environ 8 Mo) : retirez une photo pour en ajouter une autre.");
+      problemes.push("Taille totale des photos dépassée (environ 8 Mo) : retire une photo pour en ajouter une autre.");
       break;
     }
     iaPhotos.push({ fichier: reduite, adresse: URL.createObjectURL(reduite) });
@@ -2266,8 +2269,8 @@ function remplirBrouillonIa(fiche, premiere) {
     iaB.type.value = iaType;
     if (fiche.type !== iaType) {
       avertissements.unshift(fiche.type === "cocktail"
-        ? "L'IA pense qu'il s'agit plutôt d'un cocktail : vérifiez le type."
-        : "L'IA pense qu'il s'agit plutôt d'une recette : vérifiez le type.");
+        ? "L'IA pense qu'il s'agit plutôt d'un cocktail : vérifie le type."
+        : "L'IA pense qu'il s'agit plutôt d'une recette : vérifie le type.");
     }
     iaB.titre.value = fiche.titre || iaDepart.titre;
     iaB.lien.value = lienValide(iaLien.value) || "";
