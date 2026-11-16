@@ -193,8 +193,8 @@
           (de Toque&amp;Tonic, ou de Wodo : seuls ses recettes, cocktails et notes sont repris).
         </p>
         <div class="boutons-sauvegarde">
-          <button type="button" id="bouton-exporter">📤 Exporter</button>
-          <button type="button" id="bouton-importer">📥 Importer</button>
+          <button type="button" id="bouton-exporter">Exporter</button>
+          <button type="button" id="bouton-importer">Importer</button>
         </div>
         <!-- Sélecteur de fichier caché : le bouton "Importer" l'ouvre -->
         <input type="file" id="champ-fichier" accept=".json,application/json" hidden>
@@ -320,6 +320,8 @@
         <div class="boutons-actions">
           <button type="submit" class="bouton-action principal">Enregistrer</button>
           <button type="button" id="edition-annuler" class="bouton-action secondaire">Annuler</button>
+          <!-- Supprimer (déplacé ici depuis la fiche, v1.7) : 2 appuis -->
+          <button type="button" id="edition-supprimer" class="bouton-action supprimer">Supprimer la fiche</button>
         </div>
       </form>
     </div>
@@ -329,65 +331,108 @@
        Tout le texte est mis par app.js avec textContent (aucun HTML importé). -->
   <dialog id="fiche" class="fiche-page" aria-labelledby="fiche-titre">
     <div class="fiche-contenu" tabindex="-1" autofocus>
-      <div class="fiche-haut">
-        <button type="button" id="fiche-retour" class="bouton-rond fiche-retour" aria-label="Retour">
-          <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+      <!-- En-tête : retour, « Recette », modifier et favori -->
+      <div class="fiche-barre">
+        <button type="button" id="fiche-retour" class="btn-icone" aria-label="Retour">
+          <svg data-icone="retour"></svg>
+        </button>
+        <p id="fiche-barre-titre" class="t-libelle fiche-barre-titre">Recette</p>
+        <button type="button" id="fiche-modifier" class="btn-icone" aria-label="Modifier la fiche">
+          <svg data-icone="crayon"></svg>
+        </button>
+        <button type="button" id="fiche-favori" class="btn-icone" aria-pressed="false" aria-label="Favori">
+          <svg data-icone="signet"></svg>
         </button>
       </div>
 
-      <!-- Photos : défilement horizontal ; points indicateurs s'il y en a plusieurs -->
-      <div id="fiche-photos" class="fiche-photos" hidden></div>
-      <div id="fiche-points" class="fiche-points" aria-hidden="true" hidden></div>
-
-      <!-- En-tête : type, titre, temps, portions, note, source -->
-      <header class="fiche-entete verre">
-        <p id="fiche-type" class="fiche-type"></p>
-        <h2 id="fiche-titre"></h2>
-        <ul id="fiche-infos" class="fiche-infos"></ul>
-        <p id="fiche-note" class="fiche-note" hidden></p>
-        <a id="fiche-source" class="fiche-source" target="_blank" rel="noopener" hidden>Voir la source ↗</a>
+      <!-- Badge, « MON CARNET · N° 3 », titre -->
+      <header class="fiche-tete">
+        <div id="fiche-badges" class="fiche-badges"></div>
+        <p id="fiche-numero-carnet" class="surtitre"></p>
+        <h2 id="fiche-titre" class="t-ecran"></h2>
       </header>
 
-      <!-- Ingrédients, adaptés au nombre de personnes -->
-      <section id="fiche-bloc-ingredients" class="fiche-bloc verre" aria-labelledby="fiche-titre-ingredients" hidden>
-        <h3 id="fiche-titre-ingredients">Ingrédients</h3>
-        <div class="portions">
-          <button type="button" id="portions-moins" class="bouton-portions" aria-label="Une personne de moins">
-            <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M5 12h14"/></svg>
-          </button>
-          <p id="portions-texte" aria-live="polite"></p>
-          <button type="button" id="portions-plus" class="bouton-portions" aria-label="Une personne de plus">
-            <svg viewBox="0 0 24 24" class="icone-svg" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
-          </button>
+      <!-- Grand emplacement photo (300 px) : photos qui défilent, ou cadre
+           pointillé pour en ajouter une -->
+      <div class="fiche-photo-zone">
+        <div id="fiche-photos" class="fiche-photos" hidden></div>
+        <div id="fiche-points" class="fiche-points" aria-hidden="true" hidden></div>
+        <div id="fiche-photo-vide" class="cadre-pointille fiche-photo-vide" hidden>
+          <svg data-icone="appareil"></svg>
+          <button type="button" id="fiche-ajouter-photo" class="btn btn-secondaire">Ajouter une photo</button>
+          <p class="t-italique">Ton assiette, la carte du resto ou une capture</p>
         </div>
-        <p id="portions-inconnues" class="aide portions-aide" hidden>
-          Portions d'origine inconnues : les quantités sont comptées pour 4.
-        </p>
-        <button type="button" id="portions-retablir" class="bouton-retablir" hidden></button>
-        <ul id="fiche-ingredients" class="fiche-ingredients"></ul>
-      </section>
-
-      <!-- Étapes : une carte par étape -->
-      <section id="fiche-bloc-etapes" aria-labelledby="fiche-titre-etapes" hidden>
-        <h3 id="fiche-titre-etapes" class="fiche-titre-bloc">Étapes</h3>
-        <ol id="fiche-etapes" class="fiche-etapes"></ol>
-      </section>
-
-      <p id="fiche-vide" class="aide vide" hidden>
-        Pas encore d'ingrédients ni d'étapes. Touchez « Modifier » pour les ajouter.
-      </p>
-
+      </div>
       <!-- Photo de la fiche : changer (sans IA) ou retirer -->
-      <div class="fiche-boutons-photo">
-        <button type="button" id="fiche-changer-photo" class="bouton-action">Changer la photo</button>
-        <button type="button" id="fiche-retirer-photo" class="bouton-action" hidden>Retirer la photo</button>
+      <div id="fiche-boutons-photo" class="fiche-boutons-photo" hidden>
+        <button type="button" id="fiche-changer-photo" class="btn btn-texte">Changer la photo</button>
+        <button type="button" id="fiche-retirer-photo" class="btn btn-texte" hidden>Retirer la photo</button>
       </div>
       <input type="file" id="fiche-fichier-photo" accept="image/*" hidden>
       <p id="fiche-message-photo" class="message erreur" role="status" hidden></p>
 
-      <div class="boutons-actions fiche-boutons">
-        <button type="button" id="fiche-modifier" class="bouton-action">Modifier</button>
-        <button type="button" id="fiche-supprimer" class="bouton-action supprimer">Supprimer</button>
+      <!-- 4 métadonnées (icônes ambre) : préparation, cuisson, portions, niveau -->
+      <ul id="fiche-infos" class="fiche-infos"></ul>
+
+      <!-- Portions : − / + recalcule les quantités (rien n'est enregistré) -->
+      <section id="fiche-bloc-portions" class="fiche-portions" aria-label="Portions" hidden>
+        <div class="fiche-portions-textes">
+          <p class="t-libelle">Portions</p>
+          <p id="portions-inconnues" class="t-italique fiche-portions-aide" hidden>
+            Portions d'origine inconnues : quantités comptées pour 4.
+          </p>
+          <button type="button" id="portions-retablir" class="fiche-portions-retablir" hidden></button>
+        </div>
+        <div class="selecteur">
+          <button type="button" id="portions-moins" class="btn-icone" aria-label="Une personne de moins">
+            <svg data-icone="moins"></svg>
+          </button>
+          <p id="portions-texte" class="t-quantite selecteur-valeur" aria-live="polite"></p>
+          <button type="button" id="portions-plus" class="btn-icone" aria-label="Une personne de plus">
+            <svg data-icone="plus"></svg>
+          </button>
+        </div>
+      </section>
+
+      <!-- Ingrédients : une carte par ligne, à cocher ; « 2 SUR 8 PRÊTS » -->
+      <section id="fiche-bloc-ingredients" class="fiche-bloc" aria-labelledby="fiche-titre-ingredients" hidden>
+        <div class="fiche-bloc-entete">
+          <h3 id="fiche-titre-ingredients" class="t-section">Ingrédients</h3>
+          <span id="fiche-compteur" class="pilule pilule-neutre" aria-live="polite"></span>
+        </div>
+        <ul id="fiche-ingredients" class="fiche-ingredients"></ul>
+      </section>
+
+      <!-- Étapes : blocs numérotés ; « # Titre » = titre de partie -->
+      <section id="fiche-bloc-etapes" class="fiche-bloc" aria-labelledby="fiche-titre-etapes" hidden>
+        <h3 id="fiche-titre-etapes" class="t-section">Étapes</h3>
+        <ol id="fiche-etapes" class="fiche-etapes"></ol>
+      </section>
+
+      <p id="fiche-vide" class="t-italique liste-vide" hidden>
+        Pas encore d'ingrédients ni d'étapes. Touche le crayon pour les ajouter.
+      </p>
+
+      <!-- Mes notes -->
+      <section class="fiche-encart" aria-labelledby="fiche-titre-notes">
+        <h3 id="fiche-titre-notes" class="t-libelle fiche-encart-titre">Mes notes</h3>
+        <p id="fiche-note" class="t-italique fiche-note"></p>
+      </section>
+
+      <!-- D'où ça vient : la source (texte et lien) -->
+      <section id="fiche-bloc-source" class="fiche-encart fiche-source-bloc" aria-labelledby="fiche-titre-source" hidden>
+        <h3 id="fiche-titre-source" class="t-libelle fiche-encart-titre">D'où ça vient</h3>
+        <p id="fiche-source-texte" class="fiche-source-texte"></p>
+        <a id="fiche-source" class="btn btn-texte fiche-source-lien" target="_blank" rel="noopener" hidden>
+          <svg data-icone="ouvrir"></svg>Ouvrir la source
+        </a>
+      </section>
+
+      <!-- Bouton fixé en bas de l'écran -->
+      <div id="fiche-bas" class="fiche-bas" hidden>
+        <button type="button" id="fiche-mode-cuisine" class="btn btn-principal btn-bloc btn-grand">
+          Lancer le mode cuisine
+        </button>
       </div>
     </div>
   </dialog>
@@ -504,8 +549,8 @@
           <input id="ia-b-titre" type="text" maxlength="200" autocapitalize="sentences">
           <label for="ia-b-type" class="etiquette">Type</label>
           <select id="ia-b-type">
-            <option value="recette">🍳 Recette</option>
-            <option value="cocktail">🍸 Cocktail</option>
+            <option value="recette">Recette</option>
+            <option value="cocktail">Cocktail</option>
           </select>
           <div class="edition-colonnes">
             <div class="edition-champ">
@@ -639,10 +684,10 @@
       enregistrée, puis appuie sur « Remplacer ».
     </p>
     <p id="info-sauvegarde-faite" hidden>
-      ✅ Sauvegarde proposée. Si elle est bien enregistrée, tu peux remplacer.
+      Sauvegarde proposée. Si elle est bien enregistrée, tu peux remplacer.
     </p>
     <div class="boutons-fenetre">
-      <button type="button" id="bouton-sauver-avant">📤 Sauvegarder ma liste actuelle</button>
+      <button type="button" id="bouton-sauver-avant">Sauvegarder ma liste actuelle</button>
       <button type="button" id="bouton-remplacer" class="danger">Remplacer</button>
       <button type="button" id="bouton-annuler-import" class="secondaire">Annuler</button>
     </div>

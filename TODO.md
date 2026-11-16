@@ -7,6 +7,7 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 
 - [ ] Sur l'iPhone : installer Toque&Tonic depuis https://womack82.github.io/toque-tonic/ (Safari → Partager → « Sur l'écran d'accueil »), importer une sauvegarde exportée depuis Wodo, puis recoller l'adresse du relais, la clé Gemini et le prénom
 - [ ] Icône de l'app : pour la changer, remplacer dans `icons/` les fichiers `icone-32.png` (onglet du navigateur), `icone-180.png` (iPhone), `icone-192.png` et `icone-512.png` (Android ; la 512 sert aussi d'icône « adaptative », son dessin doit tenir dans le cercle central de 80 %), `icone-1024.png` (original), en gardant les mêmes noms, puis changer la version du cache
+- [ ] Quantités recalculées : arrondir les grammes et millilitres (aujourd'hui « 106,67 g » au lieu de « 105 g »)
 - [ ] Remettre un bouton « Coller le lien copié » qui fonctionne sur iPhone (l'ancien code est dans l'historique Git de Wodo, avant sa v1.24)
 
 ## Fait
@@ -18,3 +19,4 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 - [x] v1.4 — Refonte, étape 2 : icônes « Trait fin » (`icones.js`) et composants de base (`composants.css` : boutons, badges, cartes, champ de recherche, barre d'onglets flottante) ; page de contrôle `galerie.html`
 - [x] v1.5 — Refonte, étape 3 : navigation. Barre d'onglets flottante Accueil, Recettes | + | Cocktails, Favoris ; page Favoris ; en-tête « Toque & Tonic » avec bouton profil (ouvre les Réglages) ; rubrique Prénom cachée (code et valeur gardés)
 - [x] v1.6 — Refonte, étape 4 : accueil « Mon carnet » (recherche par titre, ingrédient ou source ; filtres Tout, Recettes, Cocktails ; tri plus récent, plus ancien ou A à Z, gardé sur l'appareil) ; cartes horizontales avec photo de 104 px ou cadre pointillé, badge, titre et source ; mêmes cartes sur Recettes, Cocktails et Favoris ; carrés compteurs retirés
+- [x] v1.7 — Refonte, étape 5 : fiche recette. En-tête (retour, modifier, favori), badge et « Mon carnet · N° x », grand emplacement photo (300 px, cadre pointillé « Ajouter une photo » sans photo), 4 métadonnées, encart Portions, ingrédients à cocher « nom ····· quantité » avec compteur « 2 sur 8 prêts », étapes numérotées (avec leur durée si elle existe), Mes notes, D'où ça vient, bouton « Lancer le mode cuisine ». Favoris. « Supprimer la fiche » déplacé dans l'écran Modifier. Nouveaux champs facultatifs (favori, niveau, source, glace, garniture, présence d'alcool, durée des étapes) gardés à l'export et à l'import : format de sauvegarde version 13. Emoji retirés de l'interface

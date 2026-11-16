@@ -20,6 +20,7 @@ const LIMITES_FICHE = {
   champCourt: 100, // verre, méthode, alcool de base
   portionsMax: 100,
   minutesMax: 10000,
+  secondesEtapeMax: 86400, // durée d'une étape (minuteur) : 24 h au plus
   longueurUnite: 30,      // « c. à soupe », « g »… (ingrédients détaillés)
   quantiteMax: 100000,
   longueurPhoto: 400000,  // photo gardée dans la fiche (texte base64, ~300 Ko)
@@ -447,7 +448,35 @@ function verifierChampsFiche(el, numero) {
   if (el.portions !== undefined) propre.portions = entier(el.portions, 1, LIMITES_FICHE.portionsMax, "un nombre de portions");
   if (el.tempsPreparation !== undefined) propre.tempsPreparation = entier(el.tempsPreparation, 1, LIMITES_FICHE.minutesMax, "un temps de préparation");
   if (el.tempsCuisson !== undefined) propre.tempsCuisson = entier(el.tempsCuisson, 1, LIMITES_FICHE.minutesMax, "un temps de cuisson");
-  for (const [cle, nom] of [["verre", "un verre"], ["methode", "une méthode"], ["alcoolBase", "un alcool de base"]]) {
+  // Version 13 (refonte, v1.7) : favori, niveau, source en texte ; pour les
+  // cocktails : glace, garniture, présence d'alcool ; durée des étapes.
+  // Tous facultatifs : une fiche sans ces champs reste valable.
+  if (el.favori !== undefined) {
+    if (typeof el.favori !== "boolean") throw new Error(`${numero} a un favori invalide.`);
+    if (el.favori) propre.favori = true;
+  }
+  if (el.avecAlcool !== undefined) {
+    if (typeof el.avecAlcool !== "boolean") throw new Error(`${numero} a une présence d'alcool invalide.`);
+    propre.avecAlcool = el.avecAlcool;
+  }
+  if (el.niveau !== undefined) {
+    if (!NIVEAUX.includes(el.niveau)) throw new Error(`${numero} a un niveau invalide.`);
+    propre.niveau = el.niveau;
+  }
+  // Durée de chaque étape en secondes (null : pas de durée), rangée à côté
+  // de la liste des étapes, comme « ingredientsDetail » pour les ingrédients
+  if (el.etapesDurees !== undefined) {
+    const durees = el.etapesDurees;
+    if (!Array.isArray(durees) || durees.length > LIMITES_FICHE.etapes ||
+        durees.some((d) => d !== null && (!Number.isInteger(d) || d < 1 || d > LIMITES_FICHE.secondesEtapeMax))) {
+      throw new Error(`${numero} a une liste de durées d'étapes invalide.`);
+    }
+    if (propre.etapes && durees.length === propre.etapes.length && durees.some(Boolean)) {
+      propre.etapesDurees = durees;
+    }
+  }
+  for (const [cle, nom] of [["verre", "un verre"], ["methode", "une méthode"], ["alcoolBase", "un alcool de base"],
+    ["source", "une source"], ["glace", "une glace"], ["garniture", "une garniture"]]) {
     if (el[cle] !== undefined) {
       const texte = texteCourt(el[cle], nom);
       if (texte) propre[cle] = texte;
@@ -462,7 +491,14 @@ const CHAMPS_FICHE = [
   "verre", "methode", "alcoolBase",
   "ingredientsDetail", "photoPerso", // fiches créées avec l'IA (v1.12)
   "photoId", // photo rangée dans IndexedDB (v1.19), remplace photoPerso
+  // Refonte (v1.7) : favori, niveau, source en texte, glace, garniture,
+  // présence d'alcool, durée des étapes
+  "favori", "niveau", "source", "glace", "garniture", "avecAlcool", "etapesDurees",
 ];
+
+// Niveaux de difficulté d'une recette (champ « niveau »)
+const NIVEAUX = ["facile", "moyen", "difficile"];
+const NOMS_NIVEAUX = { facile: "Facile", moyen: "Moyen", difficile: "Difficile" };
 
 // --- 4. Ingrédients détaillés et photo gardée (fiches créées avec l'IA) ---
 // L'IA donne chaque ingrédient en trois morceaux : quantité, unité, nom.
@@ -510,6 +546,46 @@ function adapterDetail(d, facteur) {
   } catch {
     return null;
   }
+}
+
+// --- Ligne d'ingrédient « nom ····· quantité » (fiche, v1.7) ---
+// Unités reconnues juste après le nombre : elles passent du côté de la
+// quantité (« 150 g de sucre » → quantité « 150 g », nom « sucre »).
+const MOTIF_UNITE = new RegExp(
+  "^\\s*(" + [
+    "mg", "g", "kg", "ml", "cl", "dl", "l", "cm", "oz",
+    "c\\.\\s?à\\s?(?:s|c|soupe|café)\\.?", "cuill(?:ère|ere)s?\\s+à\\s+(?:soupe|café)",
+    "cs", "cc", "càs", "càc", "tasses?", "verres?", "pincées?", "gousses?",
+    "tranches?", "brins?", "branches?", "feuilles?", "traits?", "sachets?",
+    "boîtes?", "pots?", "bottes?", "poignées?", "noix", "zestes?",
+  ].join("|") + ")\\.?(?=\\s|$)",
+  "i"
+);
+
+// Coupe une ligne en { quantite, nom } pour le nombre de personnes choisi
+// (facteur = personnes choisies / personnes d'origine).
+// detail : l'ingrédient détaillé par l'IA s'il existe ({ q, u, n }).
+// Une ligne sans quantité reconnue : quantite vide, nom = la ligne entière.
+function separerIngredient(ligne, detail, facteur) {
+  const sansDe = (texte) => texte.trim().replace(/^(?:de|d')\s*/i, "").replace(/^d'/i, "");
+  const nomPropre = (texte) => sansDe(texte) || String(ligne).trim();
+  if (detail) {
+    const adapte = adapterDetail(detail, facteur);
+    if (adapte) return { quantite: [adapte.quantite, detail.u.trim()].filter(Boolean).join(" "), nom: nomPropre(detail.n) };
+  }
+  const adapte = adapterIngredient(ligne, facteur);
+  if (!adapte.quantite) return { quantite: "", nom: String(ligne).trim() };
+  // « Farine : 200 g » : le nom est avant la quantité
+  const avant = adapte.avant.replace(/[:\s]+$/, "").replace(/^[-•*\s]+/, "");
+  let reste = adapte.apres;
+  let quantite = adapte.quantite;
+  const unite = MOTIF_UNITE.exec(reste);
+  if (unite) {
+    quantite += " " + unite[1];
+    reste = reste.slice(unite[0].length);
+  }
+  const nom = [avant, sansDe(reste)].filter(Boolean).join(" ");
+  return { quantite, nom: nom || String(ligne).trim() };
 }
 
 // Après une modification des lignes d'ingrédients : chaque ligne restée

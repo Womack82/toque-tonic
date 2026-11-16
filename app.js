@@ -7,15 +7,12 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.6";
+const VERSION = "v1.7";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
 // (womack82.github.io) et ses données commencent par « wodo ».
 const CLE_STOCKAGE = "toque-tonic";
-
-// Emoji affiché devant chaque type
-const EMOJIS = { recette: "🍳", cocktail: "🍸" };
 
 // Recettes et cocktails sont des FICHES à conserver : pas de case à cocher,
 // jamais « terminées ».
@@ -465,11 +462,11 @@ let editionDepuisFiche = false;
 let idActions = null;
 let minuteurConfirmation = null;
 
-// Le menu des types du panneau : « 🍳 Recette », « 🍸 Cocktail »
+// Le menu des types du panneau : « Recette », « Cocktail »
 function remplirTypes() {
   editionType.replaceChildren();
   for (const type of Object.keys(NOMS_SIMPLES)) {
-    editionType.append(new Option(`${EMOJIS[type]} ${NOMS_SIMPLES[type]}`, type));
+    editionType.append(new Option(NOMS_SIMPLES[type], type));
   }
 }
 
@@ -478,6 +475,8 @@ function annulerConfirmation() {
   clearTimeout(minuteurConfirmation);
   actionsSupprimer.textContent = "Supprimer";
   actionsSupprimer.classList.remove("confirmer");
+  editionSupprimer.textContent = "Supprimer la fiche";
+  editionSupprimer.classList.remove("confirmer");
 }
 
 function ouvrirActions(id) {
@@ -615,6 +614,8 @@ actionsEdition.addEventListener("submit", (evenement) => {
       ingredientsDetail: detailPourLignes(ingredients, ancien.ingredients, ancien.ingredientsDetail),
       etapes: lireChampEtapes(editionEtapes),
     };
+    // Durées des étapes : chaque étape restée identique garde la sienne
+    recette.etapesDurees = detailPourLignes(recette.etapes, ancien.etapes, ancien.etapesDurees);
     // Seuls les champs visibles sont modifiés : la cuisson d'une recette
     // passée en cocktail (ou l'inverse) est gardée
     if (type === "recette") recette.tempsCuisson = cuisson;
@@ -654,6 +655,22 @@ actionsSupprimer.addEventListener("click", () => {
   }
   actionsSupprimer.textContent = "Confirmer la suppression ?";
   actionsSupprimer.classList.add("confirmer");
+  minuteurConfirmation = setTimeout(annulerConfirmation, 3000);
+});
+
+// « Supprimer la fiche » (écran Modifier) : même principe en 2 appuis ;
+// la fiche ouverte derrière se ferme aussi
+const editionSupprimer = document.getElementById("edition-supprimer");
+editionSupprimer.addEventListener("click", () => {
+  if (idActions === null) return;
+  if (editionSupprimer.classList.contains("confirmer")) {
+    supprimer(idActions);
+    fermerActions();
+    fermerFiche();
+    return;
+  }
+  editionSupprimer.textContent = "Confirmer la suppression ?";
+  editionSupprimer.classList.add("confirmer");
   minuteurConfirmation = setTimeout(annulerConfirmation, 3000);
 });
 
@@ -1049,36 +1066,46 @@ formulaire.addEventListener("submit", (evenement) => {
 ajoutDirect.addEventListener("click", ajouterTelQuel);
 
 // --- 5. La page d'une fiche (recette, cocktail) ---------------
-// S'ouvre quand on touche la carte : photos, titre, temps, portions,
-// source, ingrédients adaptables au nombre de personnes, étapes.
-// Aucune case à cocher. Tout le texte passe par textContent : un texte
-// importé ne peut jamais injecter de HTML.
+// S'ouvre quand on touche la carte : en-tête (retour, modifier, favori),
+// badge et numéro dans le carnet, grande photo, métadonnées, portions,
+// ingrédients à cocher, étapes, notes, source, bouton « mode cuisine ».
+// Tout le texte passe par textContent : un texte importé ne peut jamais
+// injecter de HTML.
 const pageFiche = document.getElementById("fiche");
+const ficheBarreTitre = document.getElementById("fiche-barre-titre");
+const ficheFavori = document.getElementById("fiche-favori");
+const ficheBadges = document.getElementById("fiche-badges");
+const ficheNumeroCarnet = document.getElementById("fiche-numero-carnet");
 const fichePhotos = document.getElementById("fiche-photos");
 const fichePoints = document.getElementById("fiche-points");
-const ficheType = document.getElementById("fiche-type");
+const fichePhotoVide = document.getElementById("fiche-photo-vide");
+const ficheBoutonsPhoto = document.getElementById("fiche-boutons-photo");
 const ficheTitre = document.getElementById("fiche-titre");
 const ficheInfos = document.getElementById("fiche-infos");
 const ficheNote = document.getElementById("fiche-note");
+const ficheBlocSource = document.getElementById("fiche-bloc-source");
+const ficheSourceTexte = document.getElementById("fiche-source-texte");
 const ficheSource = document.getElementById("fiche-source");
+const ficheBlocPortions = document.getElementById("fiche-bloc-portions");
 const ficheBlocIngredients = document.getElementById("fiche-bloc-ingredients");
 const ficheIngredients = document.getElementById("fiche-ingredients");
+const ficheCompteur = document.getElementById("fiche-compteur");
 const ficheBlocEtapes = document.getElementById("fiche-bloc-etapes");
 const ficheEtapes = document.getElementById("fiche-etapes");
 const ficheVide = document.getElementById("fiche-vide");
-const ficheSupprimer = document.getElementById("fiche-supprimer");
+const ficheBas = document.getElementById("fiche-bas");
 const portionsTexte = document.getElementById("portions-texte");
 const portionsMoins = document.getElementById("portions-moins");
 const portionsPlus = document.getElementById("portions-plus");
 const portionsRetablir = document.getElementById("portions-retablir");
 const portionsInconnues = document.getElementById("portions-inconnues");
 
-// Fiche affichée (null = fermée) et nombre de personnes choisi
-// (null = celui de la recette). Ce choix n'est pas enregistré : la fiche
-// repart toujours des portions d'origine.
+// Fiche affichée (null = fermée), nombre de personnes choisi (null = celui
+// de la recette) et ingrédients cochés (leurs numéros de ligne). Ces choix
+// ne sont pas enregistrés : la fiche repart de zéro à chaque ouverture.
 let idFiche = null;
 let personnesFiche = null;
-let minuteurSuppressionFiche = null;
+let ingredientsCoches = new Set();
 
 // Portions d'origine ; 4 si la recette ne les donne pas
 const portionsDeBase = (el) => el.portions || 4;
@@ -1087,7 +1114,7 @@ function ouvrirFiche(id) {
   if (!elements.some((e) => e.id === id)) return;
   idFiche = id;
   personnesFiche = null;
-  annulerSuppressionFiche();
+  ingredientsCoches = new Set();
   ficheMessagePhoto.hidden = true;
   afficherFiche();
   verrouillerPage();
@@ -1101,10 +1128,30 @@ function fermerFiche() {
 }
 pageFiche.addEventListener("close", () => {
   idFiche = null;
-  annulerSuppressionFiche();
   deverrouillerPage();
 });
 document.getElementById("fiche-retour").addEventListener("click", fermerFiche);
+
+// Numéro de la fiche dans le carnet : 1 pour la plus ancienne
+function numeroDansCarnet(el) {
+  const fiches = elements.filter((e) => estFiche(e.type))
+    .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+  return fiches.indexOf(el) + 1;
+}
+
+// Une métadonnée : icône ambre, libellé en capitales, valeur
+function creerInfo(nomIcone, libelle, valeur) {
+  const li = document.createElement("li");
+  li.className = "fiche-info";
+  const etiquette = document.createElement("span");
+  etiquette.className = "t-libelle-petit fiche-info-libelle";
+  etiquette.textContent = libelle;
+  const texte = document.createElement("span");
+  texte.className = "t-quantite fiche-info-valeur";
+  texte.textContent = valeur || "—";
+  li.append(icone(nomIcone), etiquette, texte);
+  return li;
+}
 
 // Dessine toute la fiche à partir de l'élément enregistré
 function afficherFiche() {
@@ -1114,79 +1161,129 @@ function afficherFiche() {
     fermerFiche();
     return;
   }
-  ficheType.textContent = NOMS_SIMPLES[el.type];
+  ficheBarreTitre.textContent = NOMS_SIMPLES[el.type];
+  majFavoriFiche(el);
+
+  const badge = document.createElement("span");
+  badge.className = `pilule pilule-${el.type}`;
+  badge.textContent = NOMS_SIMPLES[el.type];
+  ficheBadges.replaceChildren(badge);
+  ficheNumeroCarnet.textContent = `Mon carnet · N° ${numeroDansCarnet(el)}`;
   ficheTitre.textContent = el.titre;
+
   afficherPhotos(el);
   majBoutonsPhotoFiche(el);
 
-  // Petites pastilles : temps, portions ; pour un cocktail, le verre, la
-  // méthode et l'alcool de base à la place de la cuisson
-  const infos = [];
-  if (el.tempsPreparation) infos.push(["Préparation", formaterDuree(el.tempsPreparation)]);
-  if (el.type === "recette" && el.tempsCuisson) infos.push(["Cuisson", formaterDuree(el.tempsCuisson)]);
-  if (el.type === "cocktail") {
-    if (el.verre) infos.push(["Verre", el.verre]);
-    if (el.methode) infos.push(["Méthode", el.methode]);
-    if (el.alcoolBase) infos.push(["Alcool de base", el.alcoolBase]);
-  }
-  if (el.portions) infos.push(["Portions", pluriel(el.portions, "personne")]);
-  ficheInfos.replaceChildren(...infos.map(([nom, valeur]) => {
-    const li = document.createElement("li");
-    const etiquette = document.createElement("span");
-    etiquette.textContent = nom;
-    const texte = document.createElement("strong");
-    texte.textContent = valeur;
-    li.append(etiquette, texte);
-    return li;
-  }));
-  ficheInfos.hidden = infos.length === 0;
-
-  ficheNote.textContent = el.note || "";
-  ficheNote.hidden = !el.note;
-  ficheSource.hidden = !el.lien;
-  if (el.lien) ficheSource.href = el.lien;
+  // 4 métadonnées. Recette : préparation, cuisson, portions, niveau.
+  // Cocktail (en attendant sa propre fiche) : temps, verre, méthode, verres.
+  const infos = el.type === "recette"
+    ? [
+      creerInfo("horloge", "Prép.", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
+      creerInfo("flamme", "Cuisson", el.tempsCuisson && formaterDuree(el.tempsCuisson)),
+      creerInfo("personnes", "Portions", el.portions && String(el.portions)),
+      creerInfo("niveau", "Niveau", el.niveau && NOMS_NIVEAUX[el.niveau]),
+    ]
+    : [
+      creerInfo("horloge", "Temps", el.tempsPreparation && formaterDuree(el.tempsPreparation)),
+      creerInfo("verre", "Verre", el.verre),
+      creerInfo("garniture", "Méthode", el.methode),
+      creerInfo("personnes", "Verres", el.portions && String(el.portions)),
+    ];
+  ficheInfos.replaceChildren(...infos);
 
   afficherIngredients(el);
 
-  // Étapes : une carte par étape, numérotées ; « # Titre » = titre de partie
+  // Étapes : un bloc par étape, numéroté ; « # Titre » = titre de partie ;
+  // une étape avec une durée affiche un petit minuteur
   const etapes = el.etapes || [];
+  const durees = el.etapesDurees || [];
   let numero = 0;
-  ficheEtapes.replaceChildren(...etapes.map((etape) => {
+  ficheEtapes.replaceChildren(...etapes.map((etape, i) => {
     const li = document.createElement("li");
     if (etape.startsWith("#")) {
-      li.className = "fiche-section";
+      li.className = "fiche-section t-libelle";
       li.textContent = etape.replace(/^#+\s*/, "");
       return li;
     }
     numero++;
-    li.className = "fiche-etape verre";
+    li.className = "fiche-etape";
     const pastille = document.createElement("span");
     pastille.className = "fiche-numero";
     pastille.textContent = numero;
     pastille.setAttribute("aria-label", `Étape ${numero}`);
+    const corps = document.createElement("div");
+    corps.className = "fiche-etape-corps";
     const texte = document.createElement("p");
     texte.textContent = etape;
-    li.append(pastille, texte);
+    corps.append(texte);
+    if (durees[i]) {
+      const duree = document.createElement("span");
+      duree.className = "pilule pilule-cocktail fiche-etape-duree";
+      duree.append(icone("minuteur"), formaterSecondes(durees[i]));
+      corps.append(duree);
+    }
+    li.append(pastille, corps);
     return li;
   }));
   ficheBlocEtapes.hidden = etapes.length === 0;
   ficheVide.hidden = etapes.length > 0 || (el.ingredients || []).length > 0;
+  // « Lancer le mode cuisine » : seulement s'il y a des étapes numérotées
+  ficheBas.hidden = numero === 0;
+  pageFiche.classList.toggle("avec-bas", numero > 0);
+
+  // Mes notes
+  ficheNote.textContent = el.note || "Pas encore de note. Touche le crayon pour en ajouter une.";
+  ficheNote.classList.toggle("fiche-note-vide", !el.note);
+
+  // D'où ça vient : la source écrite, sinon le site du lien
+  const source = texteSource(el);
+  ficheBlocSource.hidden = !source;
+  ficheSourceTexte.textContent = source;
+  ficheSource.hidden = !el.lien;
+  if (el.lien) ficheSource.href = el.lien;
 }
 
+// Durée d'une étape : 90 → « 1 min 30 », 600 → « 10 min », 20 → « 20 s »
+function formaterSecondes(secondes) {
+  if (secondes < 60) return `${secondes} s`;
+  const minutes = Math.floor(secondes / 60);
+  const reste = secondes % 60;
+  if (minutes >= 60) return formaterDuree(minutes);
+  return reste ? `${minutes} min ${String(reste).padStart(2, "0")}` : `${minutes} min`;
+}
+
+// --- Favori : le signet de l'en-tête ---
+function majFavoriFiche(el) {
+  const favori = Boolean(el.favori);
+  ficheFavori.setAttribute("aria-pressed", String(favori));
+  ficheFavori.setAttribute("aria-label", favori ? "Retirer des favoris" : "Ajouter aux favoris");
+  ficheFavori.querySelector("svg").classList.toggle("plein", favori);
+}
+ficheFavori.addEventListener("click", () => {
+  const el = elements.find((e) => e.id === idFiche);
+  if (!el) return;
+  if (el.favori) delete el.favori; else el.favori = true;
+  sauvegarder();
+  majFavoriFiche(el);
+  afficher();
+});
+
 // Photos : la première en grand ; s'il y en a plusieurs, on fait défiler
-// du doigt et les points indiquent laquelle est affichée. Une photo qui ne
-// se charge pas (hors ligne, site qui refuse) laisse voir le fond de repli.
+// du doigt et les points indiquent laquelle est affichée. Sans photo : le
+// cadre pointillé « Ajouter une photo ». Une photo qui ne se charge pas
+// (hors ligne, site qui refuse) laisse voir l'appareil photo du fond.
 function afficherPhotos(el) {
   // La photo gardée (mémoire des photos, « idb:… ») passe en premier
   const images = [adressePhotoFiche(el), ...(el.images || [])].filter(Boolean);
   fichePhotos.replaceChildren();
   fichePoints.replaceChildren();
   fichePhotos.hidden = images.length === 0;
+  fichePhotoVide.hidden = images.length > 0;
   fichePoints.hidden = images.length < 2;
   images.forEach((adresse, rang) => {
     const cadre = document.createElement("div");
     cadre.className = "fiche-photo";
-    cadre.append(creerIcone(ICONES_TYPES[el.type])); // fond de repli
+    cadre.append(icone("appareil")); // fond de repli
     // Copie floutée de la même photo, derrière : elle comble les bandes
     // vides quand la photo (affichée en entier) n'a pas le format du cadre.
     // Purement décorative : cachée aux lecteurs d'écran.
@@ -1218,7 +1315,7 @@ function afficherPhotos(el) {
   majPoints();
 }
 
-// Le point de la photo visible devient orange
+// Le point de la photo visible devient terracotta
 function majPoints() {
   const rang = Math.round(fichePhotos.scrollLeft / Math.max(1, fichePhotos.clientWidth));
   [...fichePoints.children].forEach((point, i) => point.classList.toggle("actif", i === rang));
@@ -1226,41 +1323,75 @@ function majPoints() {
 fichePhotos.addEventListener("scroll", majPoints, { passive: true });
 
 // Ingrédients pour le nombre de personnes choisi. Le texte d'origine n'est
-// jamais modifié : on calcule seulement ce qui est affiché. La quantité
-// adaptée est en gras ; une ligne sans quantité reste telle quelle.
+// jamais modifié : on calcule seulement ce qui est affiché. Chaque ligne :
+// case à cocher, nom, ligne pointillée, quantité (s'il y en a une).
 function afficherIngredients(el) {
   const ingredients = el.ingredients || [];
   ficheBlocIngredients.hidden = ingredients.length === 0;
+  ficheBlocPortions.hidden = ingredients.length === 0;
   const base = portionsDeBase(el);
   const personnes = personnesFiche ?? base;
   const facteur = personnes / base;
 
-  portionsTexte.textContent = `Pour ${pluriel(personnes, "personne")}`;
+  portionsTexte.textContent = String(personnes);
+  portionsTexte.setAttribute("aria-label", `Pour ${pluriel(personnes, "personne")}`);
   portionsMoins.disabled = personnes <= 1;
   portionsPlus.disabled = personnes >= LIMITES_FICHE.portionsMax;
   portionsInconnues.hidden = Boolean(el.portions);
   portionsRetablir.hidden = personnes === base;
-  portionsRetablir.textContent = `Rétablir les quantités d'origine (${pluriel(base, "personne")})`;
+  portionsRetablir.textContent = `Revenir à ${base}`;
 
   // Fiche créée avec l'IA : la quantité détaillée de la ligne (plus fiable),
-  // sinon la quantité lue au début de la ligne
+  // sinon la quantité lue dans la ligne
   const detail = el.ingredientsDetail || [];
   ficheIngredients.replaceChildren(...ingredients.map((ligne, i) => {
+    const { quantite, nom } = separerIngredient(ligne, detail[i], facteur);
     const li = document.createElement("li");
-    const adapte = facteur === 1 ? null
-      : (detail[i] && adapterDetail(detail[i], facteur)) || adapterIngredient(ligne, facteur);
-    if (adapte && adapte.quantite) {
-      const quantite = document.createElement("strong");
-      quantite.textContent = adapte.quantite;
-      li.append(adapte.avant, quantite, adapte.apres);
-    } else {
-      li.textContent = ligne;
+    li.className = "ingredient";
+    const coche = ingredientsCoches.has(i);
+    li.classList.toggle("coche", coche);
+    const etiquette = document.createElement("label");
+    etiquette.className = "ingredient-ligne";
+    const caseACocher = document.createElement("input");
+    caseACocher.type = "checkbox";
+    caseACocher.className = "ingredient-case";
+    caseACocher.checked = coche;
+    caseACocher.addEventListener("change", () => {
+      if (caseACocher.checked) ingredientsCoches.add(i); else ingredientsCoches.delete(i);
+      li.classList.toggle("coche", caseACocher.checked);
+      majCompteur(ingredients.length);
+    });
+    const marque = document.createElement("span");
+    marque.className = "ingredient-marque";
+    marque.append(icone("coche"));
+    const texteNom = document.createElement("span");
+    texteNom.className = "ingredient-nom";
+    texteNom.textContent = nom;
+    etiquette.append(caseACocher, marque, texteNom);
+    if (quantite) {
+      const pointilles = document.createElement("span");
+      pointilles.className = "ingredient-pointilles";
+      pointilles.setAttribute("aria-hidden", "true");
+      const texteQuantite = document.createElement("span");
+      texteQuantite.className = "t-quantite ingredient-quantite";
+      texteQuantite.textContent = quantite;
+      etiquette.append(pointilles, texteQuantite);
     }
+    li.append(etiquette);
     return li;
   }));
+  majCompteur(ingredients.length);
 }
 
-// Boutons − et + (minimum 1 personne), et « Rétablir »
+// « 2 SUR 8 PRÊTS »
+function majCompteur(total) {
+  const prets = ingredientsCoches.size;
+  ficheCompteur.textContent = `${prets} sur ${total} ${prets > 1 ? "prêts" : "prêt"}`;
+  ficheCompteur.classList.toggle("pilule-recette", prets > 0 && prets === total);
+  ficheCompteur.classList.toggle("pilule-neutre", !(prets > 0 && prets === total));
+}
+
+// Boutons − et + (minimum 1 personne), et « Revenir à … »
 function changerPersonnes(ecart) {
   const el = elements.find((e) => e.id === idFiche);
   if (!el) return;
@@ -1277,32 +1408,16 @@ portionsRetablir.addEventListener("click", () => {
   afficherIngredients(el);
 });
 
-// « Modifier » : le panneau de modification monte par-dessus la fiche
+// Crayon : le panneau de modification monte par-dessus la fiche
+// (« Supprimer la fiche » est en bas de ce panneau depuis la v1.7)
 document.getElementById("fiche-modifier").addEventListener("click", () => {
   if (idFiche === null) return;
   editionDepuisFiche = true;
   ouvrirEdition(idFiche);
 });
 
-// « Supprimer » : comme dans le panneau d'actions, premier appui →
-// « Confirmer la suppression ? » pendant 3 secondes ; deuxième appui →
-// la fiche est supprimée définitivement
-function annulerSuppressionFiche() {
-  clearTimeout(minuteurSuppressionFiche);
-  ficheSupprimer.textContent = "Supprimer";
-  ficheSupprimer.classList.remove("confirmer");
-}
-ficheSupprimer.addEventListener("click", () => {
-  if (idFiche === null) return;
-  if (ficheSupprimer.classList.contains("confirmer")) {
-    supprimer(idFiche);
-    fermerFiche();
-    return;
-  }
-  ficheSupprimer.textContent = "Confirmer la suppression ?";
-  ficheSupprimer.classList.add("confirmer");
-  minuteurSuppressionFiche = setTimeout(annulerSuppressionFiche, 3000);
-});
+// « Lancer le mode cuisine » : branché à l'étape suivante de la refonte
+const boutonModeCuisine = document.getElementById("fiche-mode-cuisine");
 
 // « Changer la photo » / « Retirer la photo » : la photo de la fiche,
 // choisie dans la photothèque ou prise avec l'appareil photo, sans IA.
@@ -1313,12 +1428,19 @@ const ficheChangerPhoto = document.getElementById("fiche-changer-photo");
 const ficheRetirerPhoto = document.getElementById("fiche-retirer-photo");
 const ficheFichierPhoto = document.getElementById("fiche-fichier-photo");
 const ficheMessagePhoto = document.getElementById("fiche-message-photo");
+const ficheAjouterPhoto = document.getElementById("fiche-ajouter-photo");
 const TEXTE_CHANGER_PHOTO = "Changer la photo";
 
+// Avec une photo : « Changer » (et « Retirer » si c'est la photo gardée)
+// sous la photo. Sans photo : « Ajouter une photo » dans le cadre pointillé.
 function majBoutonsPhotoFiche(el) {
   const aSaPhoto = Boolean(el.photoId || el.photoPerso);
-  ficheChangerPhoto.textContent = aSaPhoto || (el.images || []).length ? TEXTE_CHANGER_PHOTO : "Ajouter une photo";
+  const aDesPhotos = aSaPhoto || (el.images || []).length > 0;
+  ficheBoutonsPhoto.hidden = !aDesPhotos;
+  ficheChangerPhoto.textContent = TEXTE_CHANGER_PHOTO;
   ficheChangerPhoto.disabled = false;
+  ficheAjouterPhoto.textContent = "Ajouter une photo";
+  ficheAjouterPhoto.disabled = false;
   ficheRetirerPhoto.hidden = !aSaPhoto;
 }
 
@@ -1346,18 +1468,22 @@ function remplacerPhotoFiche(el, nouvelId) {
   return true;
 }
 
-ficheChangerPhoto.addEventListener("click", () => {
-  ficheMessagePhoto.hidden = true;
-  ficheFichierPhoto.click();
-});
+for (const bouton of [ficheChangerPhoto, ficheAjouterPhoto]) {
+  bouton.addEventListener("click", () => {
+    ficheMessagePhoto.hidden = true;
+    ficheFichierPhoto.click();
+  });
+}
 ficheFichierPhoto.addEventListener("change", async () => {
   const fichier = ficheFichierPhoto.files[0];
   ficheFichierPhoto.value = ""; // permet de rechoisir la même photo
   const id = idFiche;
   const el = elements.find((e) => e.id === id);
   if (!fichier || !el) return;
-  ficheChangerPhoto.disabled = true;
-  ficheChangerPhoto.textContent = "Préparation de la photo…";
+  for (const bouton of [ficheChangerPhoto, ficheAjouterPhoto]) {
+    bouton.disabled = true;
+    bouton.textContent = "Préparation de la photo…";
+  }
   let nouvelId = null;
   let message = "";
   try {
@@ -1958,9 +2084,12 @@ const FORMATS_ACCEPTES = [FORMAT_NOM, "wodo", "mes-listes"];
 // rangées dans IndexedDB après l'import.
 // Version 12 : jeux venus d'IGDB : identifiant « idIgdb » et jaquette dans « affiche »
 // (adresse images.igdb.com) ; les anciens jeux RAWG gardent « idRawg ».
-// L'app sait lire les douze. Les clés (Gemini) n'y sont jamais.
 // (Versions 1 à 12 : format commun avec Wodo, dont Toque&Tonic est issue.)
-const FORMAT_VERSION = 12;
+// Version 13 (Toque&Tonic v1.7) : + favori, niveau, source en texte ;
+// cocktails : glace, garniture, présence d'alcool ; durée des étapes
+// (« etapesDurees », en secondes). Tous facultatifs.
+// L'app sait lire les treize. Les clés (Gemini) n'y sont jamais.
+const FORMAT_VERSION = 13;
 // Taille maximale d'une photo dans un fichier de sauvegarde (texte base64)
 const LONGUEUR_MAX_PHOTO_FICHIER = 5 * 1024 * 1024;
 
@@ -2322,7 +2451,7 @@ function lireCle(nomStockage) {
   const afficherEtatRelais = () => {
     const adresse = lireCle(CLE_RELAIS);
     etatRelais.textContent = adresse
-      ? "✅ Un relais est enregistré sur cet appareil : l'import de recettes est activé."
+      ? "Un relais est enregistré sur cet appareil : l'import de recettes est activé."
       : "Aucun relais enregistré sur cet appareil : l'import de recettes est désactivé (l'ajout à la main reste possible).";
     champRelais.value = adresse;
     boutonEffacerRelais.hidden = !adresse;
@@ -2408,7 +2537,7 @@ function lireCle(nomStockage) {
   const afficherEtatGemini = () => {
     const presente = lireCleGemini() !== "";
     etatGemini.textContent = presente
-      ? `✅ Une clé Gemini est enregistrée sur cet appareil (modèle : ${lireModeleGemini()}).`
+      ? `Une clé Gemini est enregistrée sur cet appareil (modèle : ${lireModeleGemini()}).`
       : "Aucune clé Gemini enregistrée sur cet appareil : l'ajout par photos et texte est désactivé.";
     champModeleGemini.value = lireModeleGemini();
     boutonEffacerGemini.hidden = !presente;

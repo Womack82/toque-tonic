@@ -935,35 +935,64 @@ form.edition .message { margin: 4px 0 0; }
   backdrop-filter: none;
 }
 
-/* Photos : grande, 4:3, coins de 28 px, défilement horizontal qui « cale »
-   chaque photo ; fond de repli (dégradé + icône) sous chaque photo */
+/* Blocs de l'écran « Photos et texte » (IA) */
+.fiche-bloc { margin-top: 16px; padding: 16px; border-radius: 30px; }
+.fiche-bloc h3 { margin: 0 0 12px; font-size: 19px; font-weight: 500; }
+
+/* ===== Fiche recette / cocktail (#fiche) ===== */
+#fiche .fiche-contenu {
+  padding: 0 var(--screen-margin) calc(env(safe-area-inset-bottom) + var(--space-8));
+}
+/* Avec le bouton « mode cuisine » en bas : place pour lui */
+#fiche.avec-bas .fiche-contenu { padding-bottom: 0; }
+
+/* En-tête : retour | « RECETTE » | modifier, favori. Reste en haut. */
+.fiche-barre {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 calc(-1 * var(--screen-margin));
+  padding: max(var(--space-3), calc(env(safe-area-inset-top) + var(--space-2))) var(--screen-margin) var(--space-3);
+  background: var(--background);
+}
+.fiche-barre-titre { flex: 1; margin: 0; text-align: center; color: var(--ink-muted); }
+#fiche-favori[aria-pressed="true"] { color: var(--primary); }
+
+/* Badge, « MON CARNET · N° 3 », titre */
+.fiche-tete { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); margin-top: var(--space-2); }
+.fiche-badges { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+#fiche-titre { overflow-wrap: anywhere; }
+
+/* Grand emplacement photo : 300 px de haut */
+.fiche-photo-zone { margin-top: var(--space-5); }
 .fiche-photos {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  border-radius: 28px;
-  box-shadow: var(--verre-ombre);
+  border-radius: var(--radius-card);
   scrollbar-width: none;
 }
 .fiche-photos::-webkit-scrollbar { display: none; }
 .fiche-photo {
   position: relative;
   flex: 0 0 100%;
-  aspect-ratio: 4 / 3;
+  height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 28px;
+  border-radius: var(--radius-card);
   overflow: hidden;
   scroll-snap-align: center;
   background: var(--surface-high);
-  color: var(--accent-survol);
+  color: var(--ink-muted);
 }
-.fiche-photo .icone-svg { width: 48px; height: 48px; stroke-width: 1.5; }
+.fiche-photo > .icone { width: 40px; height: 40px; }
 /* La photo est toujours visible en entier (contain), centrée ; derrière,
-   la même photo remplit le cadre (cover), floutée, un peu assombrie et
-   agrandie (scale 1.1) pour que ses bords flous ne se voient pas.
-   Le cadre garde sa taille (4:3) et ses coins arrondis (overflow: hidden). */
+   la même photo remplit le cadre (cover), floutée et agrandie (scale 1.1)
+   pour que ses bords flous ne se voient pas. */
 .fiche-photo img {
   position: absolute;
   inset: 0;
@@ -974,128 +1003,152 @@ form.edition .message { margin: 4px 0 0; }
 }
 .fiche-photo .fiche-photo-fond {
   object-fit: cover;
-  filter: blur(20px) brightness(0.8);
+  filter: blur(20px) brightness(0.85);
   transform: scale(1.1);
 }
-/* Points sous les photos : celui de la photo visible est orange et allongé */
-.fiche-points { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+/* Points sous les photos : celui de la photo visible est terracotta et allongé */
+.fiche-points { display: flex; justify-content: center; gap: 6px; margin-top: var(--space-3); }
 .fiche-point {
   width: 8px;
   height: 8px;
   border-radius: 4px;
   background: var(--dotted);
-  transition: width var(--duree) var(--courbe), background-color var(--duree) ease-out;
+  transition: width var(--duration) var(--easing), background-color var(--duration) ease-out;
 }
-.fiche-point.actif { width: 20px; background: var(--accent); }
+.fiche-point.actif { width: 20px; background: var(--primary); }
+/* Sans photo : cadre pointillé, appareil photo, bouton, mention */
+.fiche-photo-vide { height: 300px; padding: var(--space-5); text-align: center; }
+.fiche-photo-vide > .icone { width: 36px; height: 36px; }
+.fiche-photo-vide p { margin: 0; font-size: 15px; }
+.fiche-boutons-photo { display: flex; justify-content: center; gap: var(--space-2); margin-top: var(--space-1); }
+.fiche-boutons-photo .btn:disabled,
+#fiche-ajouter-photo:disabled { cursor: progress; }
+#fiche-message-photo { margin: var(--space-3) 0 0; }
 
-/* En-tête : carte en verre, titre en grand, pastilles d'infos */
-.fiche-entete { margin-top: 14px; padding: 18px; border-radius: 30px; }
-.fiche-type { margin: 0; font-size: 13px; font-weight: 600; color: var(--bleu); }
-#fiche-titre {
-  margin: 2px 0 0;
-  font-size: 26px;
-  font-weight: 500;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  word-break: break-word;
+/* 4 métadonnées sur une ligne, icônes ambre */
+.fiche-infos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: var(--space-6) 0 0;
+  padding: var(--space-4) 0;
+  list-style: none;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
-.fiche-infos { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 14px 0 0; }
-.fiche-infos li {
+.fiche-info {
   display: flex;
   flex-direction: column;
-  padding: 8px 14px;
-  border-radius: 20px;
-  background: var(--bleu-pale);
-}
-.fiche-infos span { font-size: 11px; color: var(--gris); }
-.fiche-infos strong { font-size: 15px; word-break: break-word; }
-.fiche-note {
-  margin: 12px 0 0;
-  font-size: 14px;
-  color: var(--gris);
-  white-space: pre-line; /* garde les retours à la ligne de la note */
-  word-break: break-word;
-}
-/* « Voir la source ↗ » : bouton bleu, texte blanc */
-.fiche-source {
-  display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  margin-top: 14px;
-  padding: 0 18px;
-  border-radius: 22px;
-  background: var(--bleu);
-  color: var(--on-primary);
-  font-weight: 600;
-  text-decoration: none;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 var(--space-1);
+  text-align: center;
 }
+.fiche-info + .fiche-info { border-left: 1px solid var(--line); }
+.fiche-info > .icone { color: var(--amber); margin-bottom: var(--space-1); }
+.fiche-info-libelle { color: var(--ink-muted); }
+.fiche-info-valeur { font-size: 15px; line-height: 20px; overflow-wrap: anywhere; }
 
-/* Blocs Ingrédients et Étapes */
-.fiche-bloc { margin-top: 16px; padding: 16px; border-radius: 30px; }
-.fiche-bloc h3,
-.fiche-titre-bloc { margin: 0 0 12px; font-size: 19px; font-weight: 500; }
-.fiche-titre-bloc { margin: 24px 4px 12px; }
-
-/* Sélecteur « − Pour 4 personnes + » */
-.portions {
+/* Encart « Portions » : libellé à gauche, sélecteur − / + à droite */
+.fiche-portions {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px;
-  border-radius: 28px;
-  background: var(--card);
-  border: var(--verre-bord);
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
 }
-#portions-texte { flex: 1; margin: 0; text-align: center; font-weight: 700; font-size: 16px; }
-.bouton-portions {
+.fiche-portions-textes { min-width: 0; }
+.fiche-portions-textes .t-libelle { margin: 0; color: var(--ink); }
+.fiche-portions-aide { margin: 2px 0 0; font-size: 14px; line-height: 20px; }
+.fiche-portions-retablir {
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.selecteur { display: flex; align-items: center; gap: var(--space-2); flex-shrink: 0; }
+.selecteur .btn-icone { color: var(--primary); }
+.selecteur .btn-icone:disabled { opacity: 0.4; cursor: default; }
+.selecteur-valeur { min-width: 32px; margin: 0; font-size: 18px; text-align: center; }
+
+/* Blocs Ingrédients et Étapes */
+#fiche .fiche-bloc { margin-top: var(--space-8); padding: 0; border-radius: 0; }
+#fiche .fiche-bloc > .t-section { margin: 0 0 var(--space-4); }
+.fiche-bloc-entete {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+/* Ingrédients : carte blanche, case sauge, nom ····· quantité terracotta */
+.fiche-ingredients { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.ingredient {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  background: var(--card);
+  box-shadow: var(--shadow-card);
+  transition: background-color var(--duration) var(--easing);
+}
+.ingredient-ligne {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+/* La vraie case à cocher est invisible ; la marque est dessinée à côté */
+.ingredient-case { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.ingredient-marque {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 24px;
+  height: 24px;
   flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  background: var(--bleu);
+  border: 1.6px solid var(--sage);
+  border-radius: 6px;
   color: var(--on-primary);
+  transition: background-color var(--duration) var(--easing);
 }
-.bouton-portions .icone-svg { stroke-width: 2.5; }
-.bouton-portions:disabled { opacity: 0.35; cursor: default; }
-.portions-aide { margin: 8px 4px 0; font-size: 13px; }
-/* « Rétablir » : texte bleu souligné, zone d'appui de 44 px */
-.bouton-retablir {
-  min-height: 44px;
-  margin-top: 4px;
-  padding: 0 4px;
-  border: none;
-  background: none;
-  color: var(--bleu);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: underline;
-  text-align: left;
+.ingredient-marque .icone { width: 16px; height: 16px; stroke-width: 2.2; opacity: 0; transition: opacity var(--duration) var(--easing); }
+.ingredient-case:checked + .ingredient-marque { background: var(--sage); }
+.ingredient-case:checked + .ingredient-marque .icone { opacity: 1; }
+.ingredient-case:focus-visible + .ingredient-marque { outline: 2px solid var(--primary); outline-offset: 2px; }
+.ingredient-nom { min-width: 0; overflow-wrap: anywhere; }
+.ingredient-pointilles {
+  flex: 1;
+  min-width: var(--space-4);
+  align-self: flex-end;
+  margin-bottom: 9px;
+  border-bottom: 1.5px dotted var(--dotted);
 }
-.fiche-ingredients { list-style: none; padding: 0; margin: 8px 0 0; }
-.fiche-ingredients li {
-  padding: 11px 4px;
-  border-bottom: 1px solid var(--line);
-  font-size: 16px;
-  word-break: break-word;
-}
-.fiche-ingredients li:last-child { border-bottom: none; }
-.fiche-ingredients strong { color: var(--bleu); }
+.ingredient-quantite { flex-shrink: 0; max-width: 45%; color: var(--primary); text-align: right; }
+/* Ingrédient prêt : barré et pâli */
+.ingredient.coche { background: var(--surface-low); box-shadow: none; }
+.ingredient.coche .ingredient-nom,
+.ingredient.coche .ingredient-quantite { color: var(--ink-muted); text-decoration: line-through; }
 
-/* Étapes : une carte verre (rayon 24 px) par étape, pastille numérotée */
-.fiche-etapes { list-style: none; padding: 0; margin: 0; }
+/* Étapes : blocs surfaceLow, numéro dans un rond terracotta */
+.fiche-etapes { display: flex; flex-direction: column; gap: var(--space-3); margin: 0; padding: 0; list-style: none; }
 .fiche-etape {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding: 14px;
-  margin-bottom: 10px;
-  border-radius: 24px;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface-low);
 }
 .fiche-numero {
   display: flex;
@@ -1104,24 +1157,47 @@ form.edition .message { margin: 4px 0 0; }
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  border-radius: 50%;
-  background: var(--bleu);
+  border-radius: var(--radius-full);
+  background: var(--primary);
   color: var(--on-primary);
+  font: var(--text-quantity);
   font-size: 15px;
-  font-weight: 500;
 }
-.fiche-etape p { margin: 5px 0 0; font-size: 16px; line-height: 1.45; word-break: break-word; }
+.fiche-etape-corps { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); min-width: 0; padding-top: 3px; }
+.fiche-etape-corps p { margin: 0; overflow-wrap: anywhere; }
 /* Titre de partie (« La pâte ») entre deux étapes */
-.fiche-section { margin: 18px 6px 10px; font-size: 16px; font-weight: 500; color: var(--bleu); }
+.fiche-section { margin: var(--space-3) 0 0; color: var(--primary); }
 .fiche-section:first-child { margin-top: 0; }
 
-.fiche-boutons { margin-top: 24px; }
-/* « Changer la photo » / « Retirer la photo » : côte à côte */
-.fiche-boutons-photo { display: flex; gap: 8px; margin-top: 24px; }
-.fiche-boutons-photo .bouton-action { flex: 1; }
-.fiche-boutons-photo .bouton-action:disabled { opacity: 0.6; cursor: progress; }
-#fiche-message-photo { margin: 10px 0 0; }
-.fiche-boutons-photo + input + #fiche-message-photo[hidden] + .fiche-boutons { margin-top: 8px; }
+/* Encarts « Mes notes » et « D'où ça vient » */
+.fiche-encart {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.fiche-encart-titre { margin: 0 0 var(--space-2); color: var(--ink-muted); }
+.fiche-note {
+  margin: 0;
+  color: var(--ink);
+  white-space: pre-line; /* garde les retours à la ligne de la note */
+  overflow-wrap: anywhere;
+}
+.fiche-note.fiche-note-vide { color: var(--ink-muted); }
+.fiche-source-bloc { background: none; border: 1px solid var(--line); }
+.fiche-source-texte { margin: 0; overflow-wrap: anywhere; }
+.fiche-source-lien { margin: var(--space-2) 0 0 calc(-1 * var(--space-3)); }
+
+/* « Lancer le mode cuisine » : reste en bas de l'écran */
+.fiche-bas {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: var(--space-6) calc(-1 * var(--screen-margin)) 0;
+  padding: var(--space-3) var(--screen-margin) calc(env(safe-area-inset-bottom) + var(--space-4));
+  border-top: 1px solid var(--line);
+  background: var(--background);
+}
 
 /* Écran « Photos et texte » : photo de la fiche (une seule, non envoyée) */
 .ia-aide-vignette { margin: -4px 0 12px; font-size: 14px; }
@@ -1567,7 +1643,6 @@ form.edition .ia-photo-choix input {
   .panneau,
   .menu-carte,
   .fiche-retour,
-  .portions,
   .bouton-verre-rond,
   #fenetre-import {
     background: var(--card);
