@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.15";
+const VERSION = "v1.16";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1486,7 +1486,8 @@ function afficherIngredients(el) {
   ficheIngredients.replaceChildren(...ingredients.map((ligne, i) => {
     const separe = separerIngredient(ligne, detail[i], facteur);
     const nom = separe.nom;
-    const quantite = cocktail ? convertirDosage(separe.quantite, UNITE_DOSAGES) : separe.quantite;
+    // Cocktail : en onces ; recette : en g / kg et ml / L (v1.16)
+    const quantite = cocktail ? convertirDosage(separe.quantite, UNITE_DOSAGES) : convertirMetrique(separe.quantite);
     const li = document.createElement("li");
     li.className = "ingredient";
     const etiquette = document.createElement("div");

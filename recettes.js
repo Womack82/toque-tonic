@@ -553,7 +553,7 @@ function adapterDetail(d, facteur) {
 // quantité (« 150 g de sucre » → quantité « 150 g », nom « sucre »).
 const MOTIF_UNITE = new RegExp(
   "^\\s*(" + [
-    "mg", "g", "kg", "ml", "cl", "dl", "l", "cm", "oz",
+    "mg", "g", "kg", "ml", "cl", "dl", "l", "cm", "oz", "lbs?", "cups?",
     "c\\.\\s?à\\s?(?:s|c|soupe|café)\\.?", "cuill(?:ère|ere)s?\\s+à\\s+(?:soupe|café)",
     "cs", "cc", "càs", "càc", "tasses?", "verres?", "pincées?", "gousses?",
     "tranches?", "brins?", "branches?", "feuilles?", "traits?", "sachets?",
@@ -605,6 +605,28 @@ function convertirDosage(quantite, unite) {
   // Onces : en fractions (« 1 ½ oz ») ; centilitres : décimales (« 4,5 cl »)
   const texte = unite === "oz" ? formaterNombre(enCl / 3, true, ",") : formaterNombre(enCl, false, ",");
   return texte ? `${texte} ${unite}` : quantite;
+}
+
+// --- Recettes : unités métriques uniquement (v1.16) ---
+// Les unités américaines (livres, onces, tasses) d'une recette importée
+// sont montrées en g / kg ou ml / L. Seul l'affichage change : la ligne
+// enregistrée reste telle quelle. 1 lb = 453,6 g ; 1 oz = 28,35 g ;
+// 1 tasse (cup) = 240 ml. Arrondis : 5 en dessous de 100, sinon 10 ;
+// au-delà de 1000, en kg ou L avec une décimale.
+const GRAMMES_PAR_UNITE = { lb: 453.6, lbs: 453.6, oz: 28.35 };
+function convertirMetrique(quantite) {
+  const m = /^(.+?)\s*(lbs?|oz|cups?|tasses?)$/i.exec(String(quantite).trim());
+  if (!m) return quantite;
+  const nombre = lireNombre(m[1]);
+  if (!(nombre > 0)) return quantite;
+  const unite = m[2].toLowerCase();
+  const masse = Object.hasOwn(GRAMMES_PAR_UNITE, unite);
+  const valeur = nombre * (masse ? GRAMMES_PAR_UNITE[unite] : 240);
+  if (valeur >= 1000) {
+    return `${formaterNombre(Math.round(valeur / 100) / 10, false, ",")} ${masse ? "kg" : "L"}`;
+  }
+  const pas = valeur < 100 ? 5 : 10;
+  return `${Math.max(pas, Math.round(valeur / pas) * pas)} ${masse ? "g" : "ml"}`;
 }
 
 // Après une modification des lignes d'ingrédients : chaque ligne restée

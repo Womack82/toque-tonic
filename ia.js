@@ -183,6 +183,7 @@ const REGLES_FORMAT_IA = `Règles de format :
 - Réponds uniquement avec le JSON demandé, en français (garde le nom d'origine de la recette).
 - Information absente ou illisible : "" pour un texte, null pour un nombre, [] pour une liste. Ne devine jamais.
 - ingredients : un objet par ingrédient. "quantite" est un nombre (1/2 → 0.5 ; 1 1/2 → 1.5) ou null s'il n'y a pas de quantité. Pour une fourchette (« 2 à 3 »), mets "quantite" à null et écris tout dans "nom" (« 2 à 3 gousses d'ail »). "unite" : l'unité (g, kg, ml, cl, l, c. à café, c. à soupe, pincée…) ou "". "nom" : la suite, comme on l'écrirait après l'unité (« de farine », « œufs »).
+- Unités : pour une recette, uniquement des unités métriques (g, kg, ml, cl, l) ; convertis les livres (lb : 1 lb = 450 g), les onces (oz : 1 oz = 28 g) et les tasses (cups : 1 cup = 240 ml). Pour un cocktail, les dosages en onces (oz : 1 oz = 3 cl).
 - etapes : une étape par élément, dans l'ordre, sans numéro au début. Un titre de partie s'écrit "# Titre".
 - Temps en minutes. portions : nombre de personnes (ou de verres pour un cocktail).
 - Recette : "verre", "methode" et "alcoolBase" vides. Cocktail : "tempsCuisson" à null ; "verre" (tumbler, coupe…), "methode" (shaker, direct dans le verre, verre à mélange…), "alcoolBase" (rhum, gin…).
@@ -195,7 +196,7 @@ En cas de contradiction entre une photo et le texte collé, garde la valeur du t
 ${REGLES_FORMAT_IA}`;
 
 const CONSIGNE_REVERIFICATION_IA = `Voici une fiche de recette (ou de cocktail) au format JSON, déjà relue par une personne.
-Corrige les fautes d'orthographe, harmonise les unités (g, kg, ml, cl, l, c. à café, c. à soupe…), mets les étapes dans un ordre logique et signale dans "avertissements" toute incohérence (ingrédient utilisé dans les étapes mais absent de la liste, quantité étrange, temps manquant…).
+Corrige les fautes d'orthographe, harmonise les unités (recette : g, kg, ml, cl, l, c. à café, c. à soupe… ; cocktail : oz), mets les étapes dans un ordre logique et signale dans "avertissements" toute incohérence (ingrédient utilisé dans les étapes mais absent de la liste, quantité étrange, temps manquant…).
 N'invente rien : n'ajoute aucun ingrédient ni aucune étape, ne change pas les quantités (sauf pour convertir une unité), garde le titre, le type et les notes.
 ${REGLES_FORMAT_IA}`;
 
