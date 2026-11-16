@@ -1199,6 +1199,130 @@ form.edition .message { margin: 4px 0 0; }
   background: var(--background);
 }
 
+/* ===== Mode Cuisine (#mode-cuisine) ===== */
+.cuisine-contenu {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  padding: 0 var(--screen-margin) calc(env(safe-area-inset-bottom) + var(--space-5));
+}
+.cuisine-barre {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: max(var(--space-3), calc(env(safe-area-inset-top) + var(--space-2))) 0 var(--space-3);
+}
+.cuisine-titre-recette {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cuisine-barre-place { width: var(--touch); flex-shrink: 0; }
+
+/* « ÉTAPE 4 SUR 6 » et barre en segments */
+.cuisine-progression { margin: var(--space-3) 0 var(--space-2); color: var(--primary); }
+.cuisine-segments { display: flex; gap: var(--space-1); }
+.cuisine-segments span {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--surface-high);
+  transition: background-color var(--duration) var(--easing);
+}
+.cuisine-segments span.fait { background: var(--primary); }
+.cuisine-segments span.actuel { background: var(--primary); opacity: 0.45; }
+
+/* La carte de l'étape : numéro en grand, texte 26/36 */
+.cuisine-carte {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding: var(--space-6) var(--space-5);
+}
+.cuisine-numero {
+  margin: 0;
+  font: 400 72px/72px var(--font-serif);
+  letter-spacing: var(--tracking-title);
+  color: var(--primary);
+}
+.cuisine-texte {
+  margin: 0;
+  font: var(--text-step);
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+/* Minuteur circulaire ambre */
+.cuisine-minuteur {
+  display: flex;
+  align-items: center;
+  gap: var(--space-5);
+  width: 100%;
+  margin-top: auto;
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+.minuteur-cercle { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+.minuteur-cercle svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.minuteur-piste { fill: none; stroke: var(--amber-tint); stroke-width: 8; }
+.minuteur-arc {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 250ms linear;
+}
+.minuteur-temps {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font: var(--text-quantity);
+  font-size: 24px;
+  font-variant-numeric: tabular-nums;
+  color: var(--on-amber-tint);
+}
+.minuteur-boutons { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.btn-minuteur { background: var(--amber); border-color: var(--amber); color: var(--on-primary); min-width: 120px; }
+.btn-minuteur:active { background: var(--on-amber-tint); }
+.btn-minuteur:disabled { opacity: 1; background: var(--amber-tint); border-color: var(--amber-tint); color: var(--on-amber-tint); }
+.cuisine-minuteur.fini .minuteur-arc { stroke: var(--amber-tint); }
+
+/* Précédent / Suivant */
+.cuisine-boutons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+.cuisine-boutons .btn { padding: 0 var(--space-3); }
+.cuisine-boutons .btn:disabled { opacity: 0.4; }
+
+/* Texte lu par VoiceOver seulement */
+.visuellement-cache {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .minuteur-arc { transition: none; }
+}
+
 /* Écran « Photos et texte » : photo de la fiche (une seule, non envoyée) */
 .ia-aide-vignette { margin: -4px 0 12px; font-size: 14px; }
 .ia-vignette { width: calc((100% - 20px) / 3); margin-bottom: 4px; }

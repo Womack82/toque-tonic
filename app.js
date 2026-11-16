@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.7";
+const VERSION = "v1.8";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1416,8 +1416,225 @@ document.getElementById("fiche-modifier").addEventListener("click", () => {
   ouvrirEdition(idFiche);
 });
 
-// « Lancer le mode cuisine » : branché à l'étape suivante de la refonte
-const boutonModeCuisine = document.getElementById("fiche-mode-cuisine");
+// --- 5 ter. Le mode Cuisine ---------------------------------
+// Une étape à la fois, en grand, par-dessus la fiche. L'écran reste allumé
+// (Wake Lock) quand l'appareil le permet. Une étape qui a une durée
+// (« etapesDurees ») affiche un minuteur. Rien n'est enregistré.
+const modeCuisine = document.getElementById("mode-cuisine");
+const cuisineTitre = document.getElementById("cuisine-titre");
+const cuisineProgression = document.getElementById("cuisine-progression");
+const cuisineSegments = document.getElementById("cuisine-segments");
+const cuisinePartie = document.getElementById("cuisine-partie");
+const cuisineNumero = document.getElementById("cuisine-numero");
+const cuisineTexte = document.getElementById("cuisine-texte");
+const cuisinePrecedent = document.getElementById("cuisine-precedent");
+const cuisineSuivant = document.getElementById("cuisine-suivant");
+const cuisineMinuteur = document.getElementById("cuisine-minuteur");
+const minuteurArc = document.getElementById("minuteur-arc");
+const minuteurTemps = document.getElementById("minuteur-temps");
+const minuteurLancer = document.getElementById("minuteur-lancer");
+const minuteurRemettre = document.getElementById("minuteur-remettre");
+const minuteurMessage = document.getElementById("minuteur-annonce");
+
+// Étapes numérotées de la fiche : { texte, partie, duree (secondes ou null) }
+let etapesCuisine = [];
+let rangCuisine = 0;
+// Minuteurs, un par étape (clé : rang) : { duree, fin (heure de fin si
+// lancé), restant (secondes, si en pause ou pas lancé), sonne }.
+// On garde l'heure de fin plutôt qu'un compte à rebours : si l'iPhone met
+// l'app en pause (écran verrouillé), le temps reste juste au retour.
+let minuteurs = new Map();
+let tic = null;
+let verrouEcran = null;
+
+function etapesPourCuisine(el) {
+  const durees = el.etapesDurees || [];
+  const liste = [];
+  let partie = "";
+  (el.etapes || []).forEach((etape, i) => {
+    if (etape.startsWith("#")) {
+      partie = etape.replace(/^#+\s*/, "");
+      return;
+    }
+    liste.push({ texte: etape, partie, duree: durees[i] || null });
+  });
+  return liste;
+}
+
+function ouvrirModeCuisine() {
+  const el = elements.find((e) => e.id === idFiche);
+  if (!el) return;
+  etapesCuisine = etapesPourCuisine(el);
+  if (etapesCuisine.length === 0) return;
+  rangCuisine = 0;
+  minuteurs = new Map();
+  cuisineTitre.textContent = el.titre;
+  cuisineSegments.replaceChildren(...etapesCuisine.map(() => document.createElement("span")));
+  afficherEtapeCuisine();
+  modeCuisine.showModal();
+  garderEcranAllume();
+  clearInterval(tic);
+  tic = setInterval(majMinuteur, 250);
+}
+document.getElementById("fiche-mode-cuisine").addEventListener("click", ouvrirModeCuisine);
+
+const fermerModeCuisine = () => modeCuisine.close();
+document.getElementById("cuisine-fermer").addEventListener("click", fermerModeCuisine);
+modeCuisine.addEventListener("close", () => {
+  clearInterval(tic);
+  tic = null;
+  minuteurs = new Map();
+  libererEcran();
+});
+
+function afficherEtapeCuisine() {
+  const total = etapesCuisine.length;
+  const etape = etapesCuisine[rangCuisine];
+  cuisineProgression.textContent = `Étape ${rangCuisine + 1} sur ${total}`;
+  [...cuisineSegments.children].forEach((segment, i) => {
+    segment.classList.toggle("fait", i < rangCuisine);
+    segment.classList.toggle("actuel", i === rangCuisine);
+  });
+  cuisinePartie.hidden = !etape.partie;
+  cuisinePartie.textContent = etape.partie;
+  cuisineNumero.textContent = String(rangCuisine + 1);
+  cuisineTexte.textContent = etape.texte;
+  cuisinePrecedent.disabled = rangCuisine === 0;
+  const derniere = rangCuisine === total - 1;
+  cuisineSuivant.replaceChildren(derniere ? "Bon appétit" : "Suivant");
+  if (!derniere) cuisineSuivant.append(icone("chevron"));
+  cuisineMinuteur.hidden = !etape.duree;
+  if (etape.duree && !minuteurs.has(rangCuisine)) {
+    minuteurs.set(rangCuisine, { duree: etape.duree, fin: null, restant: etape.duree, sonne: false });
+  }
+  majMinuteur();
+  modeCuisine.scrollTop = 0;
+}
+
+cuisinePrecedent.addEventListener("click", () => {
+  if (rangCuisine === 0) return;
+  rangCuisine--;
+  afficherEtapeCuisine();
+});
+cuisineSuivant.addEventListener("click", () => {
+  if (rangCuisine >= etapesCuisine.length - 1) {
+    fermerModeCuisine(); // « Bon appétit »
+    return;
+  }
+  rangCuisine++;
+  afficherEtapeCuisine();
+});
+
+// --- Minuteur ---
+// Secondes restantes d'un minuteur (jamais moins de 0)
+function secondesRestantes(m) {
+  if (m.fin === null) return m.restant;
+  return Math.max(0, Math.ceil((m.fin - Date.now()) / 1000));
+}
+// 125 → « 2:05 », 3725 → « 1:02:05 »
+function formaterChrono(secondes) {
+  const h = Math.floor(secondes / 3600);
+  const min = Math.floor((secondes % 3600) / 60);
+  const sec = String(secondes % 60).padStart(2, "0");
+  return h ? `${h}:${String(min).padStart(2, "0")}:${sec}` : `${min}:${sec}`;
+}
+
+const CIRCONFERENCE = 2 * Math.PI * 52; // rayon du cercle : 52
+minuteurArc.style.strokeDasharray = String(CIRCONFERENCE);
+
+function majMinuteur() {
+  // Un minuteur lancé sur une autre étape peut finir : on le signale aussi
+  for (const [rang, m] of minuteurs) {
+    if (m.fin !== null && !m.sonne && secondesRestantes(m) === 0) {
+      m.sonne = true;
+      m.restant = 0;
+      m.fin = null;
+      signalerFinMinuteur(rang);
+    }
+  }
+  const m = minuteurs.get(rangCuisine);
+  if (!m || cuisineMinuteur.hidden) return;
+  const restant = secondesRestantes(m);
+  minuteurTemps.textContent = formaterChrono(restant);
+  minuteurArc.style.strokeDashoffset = String(CIRCONFERENCE * (1 - restant / m.duree));
+  cuisineMinuteur.classList.toggle("fini", m.sonne);
+  const enCours = m.fin !== null;
+  minuteurLancer.textContent = m.sonne ? "Terminé" : enCours ? "Pause" : restant < m.duree ? "Reprendre" : "Lancer";
+  minuteurLancer.disabled = m.sonne;
+  minuteurRemettre.hidden = !m.sonne && restant === m.duree;
+}
+
+minuteurLancer.addEventListener("click", () => {
+  const m = minuteurs.get(rangCuisine);
+  if (!m || m.sonne) return;
+  preparerSon(); // l'iPhone n'autorise le son qu'après un appui
+  if (m.fin === null) {
+    m.fin = Date.now() + secondesRestantes(m) * 1000;
+  } else {
+    m.restant = secondesRestantes(m);
+    m.fin = null;
+  }
+  majMinuteur();
+});
+minuteurRemettre.addEventListener("click", () => {
+  const m = minuteurs.get(rangCuisine);
+  if (!m) return;
+  Object.assign(m, { fin: null, restant: m.duree, sonne: false });
+  majMinuteur();
+});
+
+// Fin d'un minuteur : petit signal sonore (si le son est permis), vibration
+// (Android) et message lu par VoiceOver
+let contexteSon = null;
+function preparerSon() {
+  try {
+    contexteSon = contexteSon || new (window.AudioContext || window.webkitAudioContext)();
+    if (contexteSon.state === "suspended") contexteSon.resume();
+  } catch { contexteSon = null; }
+}
+function signalerFinMinuteur(rang) {
+  minuteurMessage.textContent = `Minuteur de l'étape ${rang + 1} terminé.`;
+  if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+  if (!contexteSon) return;
+  try {
+    const debut = contexteSon.currentTime;
+    for (const decalage of [0, 0.35, 0.7]) {
+      const oscillateur = contexteSon.createOscillator();
+      const volume = contexteSon.createGain();
+      oscillateur.frequency.value = 880;
+      volume.gain.setValueAtTime(0.0001, debut + decalage);
+      volume.gain.exponentialRampToValueAtTime(0.25, debut + decalage + 0.02);
+      volume.gain.exponentialRampToValueAtTime(0.0001, debut + decalage + 0.25);
+      oscillateur.connect(volume).connect(contexteSon.destination);
+      oscillateur.start(debut + decalage);
+      oscillateur.stop(debut + decalage + 0.3);
+    }
+  } catch { /* pas de son : le minuteur affiche quand même « Terminé » */ }
+}
+
+// --- Écran allumé (Wake Lock) ---
+// Demandé à l'ouverture, et de nouveau au retour dans l'app (l'iPhone le
+// relâche quand l'app passe en arrière-plan). Sans cette fonction
+// (anciens iPhone), l'écran s'éteint comme d'habitude.
+async function garderEcranAllume() {
+  if (!("wakeLock" in navigator) || !modeCuisine.open || verrouEcran) return;
+  try {
+    verrouEcran = await navigator.wakeLock.request("screen");
+    verrouEcran.addEventListener("release", () => { verrouEcran = null; });
+  } catch {
+    verrouEcran = null;
+  }
+}
+function libererEcran() {
+  if (verrouEcran) verrouEcran.release().catch(() => {});
+  verrouEcran = null;
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && modeCuisine.open) {
+    garderEcranAllume();
+    majMinuteur(); // le temps passé en arrière-plan est rattrapé
+  }
+});
 
 // « Changer la photo » / « Retirer la photo » : la photo de la fiche,
 // choisie dans la photothèque ou prise avec l'appareil photo, sans IA.

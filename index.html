@@ -437,6 +437,56 @@
     </div>
   </dialog>
 
+  <!-- Mode Cuisine : une étape à la fois, par-dessus la fiche.
+       Rempli par app.js (textContent). L'écran reste allumé si l'appareil
+       le permet (Wake Lock). -->
+  <dialog id="mode-cuisine" class="fiche-page mode-cuisine" aria-labelledby="cuisine-titre">
+    <div class="fiche-contenu cuisine-contenu" tabindex="-1" autofocus>
+      <div class="cuisine-barre">
+        <button type="button" id="cuisine-fermer" class="btn-icone" aria-label="Quitter le mode cuisine">
+          <svg data-icone="fermer"></svg>
+        </button>
+        <p id="cuisine-titre" class="t-libelle cuisine-titre-recette"></p>
+        <span class="cuisine-barre-place" aria-hidden="true"></span>
+      </div>
+
+      <!-- Progression : « ÉTAPE 4 SUR 6 » et une barre en segments -->
+      <p id="cuisine-progression" class="t-libelle cuisine-progression" aria-live="polite"></p>
+      <div id="cuisine-segments" class="cuisine-segments" aria-hidden="true"></div>
+
+      <!-- L'étape : grand numéro et texte -->
+      <article class="carte-papier cuisine-carte">
+        <p id="cuisine-partie" class="surtitre" hidden></p>
+        <p id="cuisine-numero" class="cuisine-numero" aria-hidden="true"></p>
+        <p id="cuisine-texte" class="cuisine-texte"></p>
+
+        <!-- Minuteur circulaire ambre : seulement si l'étape a une durée -->
+        <div id="cuisine-minuteur" class="cuisine-minuteur" hidden>
+          <div class="minuteur-cercle">
+            <svg viewBox="0 0 120 120" aria-hidden="true">
+              <circle class="minuteur-piste" cx="60" cy="60" r="52"></circle>
+              <circle id="minuteur-arc" class="minuteur-arc" cx="60" cy="60" r="52"></circle>
+            </svg>
+            <p id="minuteur-temps" class="minuteur-temps" role="timer" aria-live="off"></p>
+          </div>
+          <div class="minuteur-boutons">
+            <button type="button" id="minuteur-lancer" class="btn btn-minuteur">Lancer</button>
+            <button type="button" id="minuteur-remettre" class="btn btn-texte" hidden>Remettre à zéro</button>
+          </div>
+          <p id="minuteur-annonce" class="visuellement-cache" aria-live="assertive"></p>
+        </div>
+      </article>
+
+      <!-- Précédent (contour sauge) / Suivant (terracotta) -->
+      <div class="cuisine-boutons">
+        <button type="button" id="cuisine-precedent" class="btn btn-secondaire btn-grand">
+          <svg data-icone="retour"></svg>Précédent
+        </button>
+        <button type="button" id="cuisine-suivant" class="btn btn-principal btn-grand"></button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Page Notes (Réglages → Notes) : liste simple à cocher, façon Rappels.
        Le texte des notes est mis par notes.js dans des champs (aucun HTML). -->
   <dialog id="page-notes" class="fiche-page page-notes" aria-labelledby="notes-titre">
