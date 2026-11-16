@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.9";
+const VERSION = "v1.10";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -426,43 +426,50 @@ function supprimer(id) {
   afficher();
 }
 
-// --- 4 bis. Le panneau d'actions (monte du bas de l'écran) ---
-// Modifier, Supprimer (ouvert depuis la page d'une fiche).
-const panneauActions = document.getElementById("panneau-actions");
+// --- 4 bis. L'écran Modifier (crayon de la fiche) -------------
+// Formulaire complet, plein écran : photo, titre, type, source, lien,
+// portions et temps, champs propres au type, ingrédients, étapes (une ligne
+// par étape, avec sa durée facultative), notes. « Supprimer la fiche » en bas.
+const pageEdition = document.getElementById("page-edition");
 const actionsTitre = document.getElementById("actions-titre");
-const actionsBoutons = document.getElementById("actions-boutons");
-const actionsModifier = document.getElementById("actions-modifier");
-const actionsSupprimer = document.getElementById("actions-supprimer");
 const actionsEdition = document.getElementById("actions-edition");
+const editionBarreTitre = document.getElementById("edition-barre-titre");
 const editionTitre = document.getElementById("edition-titre");
 const editionType = document.getElementById("edition-type");
-// Recettes : note et lien dans le panneau, champs lien et note dans Modifier
-const actionsNote = document.getElementById("actions-note");
-const actionsLien = document.getElementById("actions-lien");
-const editionRecette = document.getElementById("edition-recette");
+const editionSource = document.getElementById("edition-source");
 const editionLien = document.getElementById("edition-lien");
 const editionNote = document.getElementById("edition-note");
 const editionErreur = document.getElementById("edition-erreur");
-// Contenu des fiches : portions, temps, champs cocktail, ingrédients, étapes
 const editionPortions = document.getElementById("edition-portions");
+const editionEtiquettePortions = document.getElementById("edition-etiquette-portions");
 const editionPreparation = document.getElementById("edition-preparation");
+const editionEtiquettePreparation = document.getElementById("edition-etiquette-preparation");
 const editionCuisson = document.getElementById("edition-cuisson");
 const editionChampCuisson = document.getElementById("edition-champ-cuisson");
+const editionNiveau = document.getElementById("edition-niveau");
+const editionChampNiveau = document.getElementById("edition-champ-niveau");
 const editionChampsCocktail = document.getElementById("edition-champs-cocktail");
 const editionVerre = document.getElementById("edition-verre");
+const editionGlace = document.getElementById("edition-glace");
+const editionGarniture = document.getElementById("edition-garniture");
 const editionMethode = document.getElementById("edition-methode");
 const editionAlcool = document.getElementById("edition-alcool");
+const editionAvecAlcool = document.getElementById("edition-avec-alcool");
 const editionIngredients = document.getElementById("edition-ingredients");
 const editionEtapes = document.getElementById("edition-etapes");
-// true quand « Modifier » a été ouvert depuis la page d'une fiche :
-// « Annuler » referme alors le panneau au lieu de montrer ses boutons
+const editionPhotoApercu = document.getElementById("edition-photo-apercu");
+const editionChangerPhoto = document.getElementById("edition-changer-photo");
+const editionRetirerPhoto = document.getElementById("edition-retirer-photo");
+const editionSupprimer = document.getElementById("edition-supprimer");
+// true quand Modifier a été ouvert depuis la page d'une fiche (toujours
+// le cas aujourd'hui) : la fiche est redessinée après « Enregistrer »
 let editionDepuisFiche = false;
 
-// L'élément concerné par le panneau (null = panneau fermé)
+// La fiche modifiée (null = écran fermé)
 let idActions = null;
 let minuteurConfirmation = null;
 
-// Le menu des types du panneau : « Recette », « Cocktail »
+// Le menu des types : « Recette », « Cocktail »
 function remplirTypes() {
   editionType.replaceChildren();
   for (const type of Object.keys(NOMS_SIMPLES)) {
@@ -470,86 +477,184 @@ function remplirTypes() {
   }
 }
 
-// Remet le bouton « Supprimer » dans son état normal
+// Remet « Supprimer la fiche » dans son état normal
 function annulerConfirmation() {
   clearTimeout(minuteurConfirmation);
-  actionsSupprimer.textContent = "Supprimer";
-  actionsSupprimer.classList.remove("confirmer");
   editionSupprimer.textContent = "Supprimer la fiche";
   editionSupprimer.classList.remove("confirmer");
-}
-
-function ouvrirActions(id) {
-  const el = elements.find((e) => e.id === id);
-  if (!el) return;
-  idActions = id;
-  actionsTitre.textContent = el.titre;
-  // Recette ou cocktail : sa note sous le titre et « Ouvrir le lien ↗ » s'ils existent
-  const recette = estFiche(el.type);
-  actionsNote.textContent = recette && el.note ? el.note : "";
-  actionsNote.hidden = !(recette && el.note);
-  actionsLien.hidden = !(recette && el.lien);
-  if (recette && el.lien) actionsLien.href = el.lien;
-  annulerConfirmation();
-  actionsBoutons.hidden = false;
-  actionsEdition.hidden = true;
-  panneauActions.showModal();
 }
 
 function fermerActions() {
   annulerConfirmation();
   idActions = null;
-  panneauActions.close();
+  if (pageEdition.open) pageEdition.close();
 }
 
-// Champs des fiches : visibles seulement quand le type choisi est Recette
-// ou Cocktail ; la cuisson pour une recette, verre / méthode / alcool de
-// base pour un cocktail
+// Champs selon le type : cuisson et niveau pour une recette ; verre,
+// glace, garniture, méthode, alcool pour un cocktail
 function majEditionRecette() {
-  const type = editionType.value;
-  editionRecette.hidden = !estFiche(type);
-  editionChampCuisson.hidden = type !== "recette";
-  editionChampsCocktail.hidden = type !== "cocktail";
+  const cocktail = editionType.value === "cocktail";
+  editionChampCuisson.hidden = cocktail;
+  editionChampNiveau.hidden = cocktail;
+  editionChampsCocktail.hidden = !cocktail;
+  editionEtiquettePortions.textContent = cocktail ? "Verres" : "Portions";
+  editionEtiquettePreparation.textContent = cocktail ? "Temps (min)" : "Préparation (min)";
+  editionBarreTitre.textContent = cocktail ? "Modifier le cocktail" : "Modifier la recette";
 }
 editionType.addEventListener("change", majEditionRecette);
 
-// Ouvre la modification d'un élément dans le panneau du bas : titre, type
-// (et, pour une recette ou un cocktail, le lien, la note et le contenu)
+// --- Étapes : une ligne par étape (texte + durée en minutes) ou par titre
+// de partie (texte seul). Les étapes sont numérotées par le CSS. ---
+const LIMITE_MINUTES_ETAPE = LIMITES_FICHE.secondesEtapeMax / 60;
+
+// Une zone de texte qui grandit avec son contenu
+function ajusterHauteurChamp(champ) {
+  champ.style.height = "auto";
+  champ.style.height = `${champ.scrollHeight}px`;
+}
+
+// Durée enregistrée (secondes) → texte du champ : 2700 → « 45 », 90 → « 1,5 »
+const minutesEnTexte = (secondes) => String(Math.round((secondes / 60) * 100) / 100).replace(".", ",");
+
+function creerLigneEtape(texte = "", secondes = null, partie = false) {
+  const li = document.createElement("li");
+  li.className = partie ? "edition-etape edition-partie" : "edition-etape";
+  const champ = document.createElement("textarea");
+  champ.className = "champ-saisie edition-etape-texte";
+  champ.rows = 1;
+  champ.maxLength = LIMITES_FICHE.longueurEtape;
+  champ.autocapitalize = "sentences";
+  champ.value = texte;
+  champ.placeholder = partie ? "Titre de la partie (ex. La pâte)" : "Décris l'étape…";
+  champ.setAttribute("aria-label", partie ? "Titre de partie" : "Texte de l'étape");
+  champ.addEventListener("input", () => ajusterHauteurChamp(champ));
+  li.append(champ);
+  if (!partie) {
+    const zone = document.createElement("label");
+    zone.className = "edition-duree";
+    const duree = document.createElement("input");
+    duree.type = "text";
+    duree.inputMode = "decimal";
+    duree.className = "champ-saisie edition-duree-champ";
+    duree.value = secondes ? minutesEnTexte(secondes) : "";
+    duree.placeholder = "—";
+    duree.setAttribute("aria-label", "Durée en minutes (facultatif)");
+    const unite = document.createElement("span");
+    unite.className = "t-libelle-petit";
+    unite.textContent = "min";
+    zone.append(duree, unite);
+    li.append(zone);
+  }
+  // Monter d'un cran (pour insérer une étape ou placer un titre de partie)
+  const monter = document.createElement("button");
+  monter.type = "button";
+  monter.className = "btn-icone edition-etape-monter";
+  monter.setAttribute("aria-label", partie ? "Monter ce titre de partie" : "Monter cette étape");
+  monter.append(icone("chevron"));
+  monter.addEventListener("click", () => {
+    if (li.previousElementSibling) {
+      li.previousElementSibling.before(li);
+      monter.focus();
+    }
+  });
+  li.append(monter);
+  const retirer = document.createElement("button");
+  retirer.type = "button";
+  retirer.className = "btn-icone edition-etape-retirer";
+  retirer.setAttribute("aria-label", partie ? "Retirer ce titre de partie" : "Retirer cette étape");
+  retirer.append(icone("poubelle"));
+  retirer.addEventListener("click", () => li.remove());
+  li.append(retirer);
+  return li;
+}
+
+function ajouterLigneEtape(partie) {
+  if (editionEtapes.children.length >= LIMITES_FICHE.etapes) return;
+  const li = creerLigneEtape("", null, partie);
+  editionEtapes.append(li);
+  li.querySelector("textarea").focus();
+}
+document.getElementById("edition-ajouter-etape").addEventListener("click", () => ajouterLigneEtape(false));
+document.getElementById("edition-ajouter-partie").addEventListener("click", () => ajouterLigneEtape(true));
+
+// Lit les lignes d'étapes → { etapes, durees } ou { erreur }.
+// Une étape tapée « 1. Mélanger » devient « Mélanger » (déjà numérotée).
+function lireLignesEtapes() {
+  const etapes = [];
+  const durees = [];
+  for (const li of editionEtapes.children) {
+    const texte = li.querySelector("textarea").value.trim().slice(0, LIMITES_FICHE.longueurEtape);
+    if (texte === "") continue;
+    if (li.classList.contains("edition-partie")) {
+      etapes.push(`# ${texte.replace(/^#+\s*/, "")}`);
+      durees.push(null);
+      continue;
+    }
+    const champDuree = li.querySelector(".edition-duree-champ");
+    const valeur = champDuree.value.trim().replace(",", ".");
+    let secondes = null;
+    if (valeur !== "") {
+      const minutes = Number(valeur);
+      if (!(minutes > 0) || minutes > LIMITE_MINUTES_ETAPE) {
+        champDuree.focus();
+        return { erreur: `Durée d'une étape : un nombre de minutes entre 0,1 et ${LIMITE_MINUTES_ETAPE} (ex. 45 ou 1,5), ou rien.` };
+      }
+      secondes = Math.max(1, Math.round(minutes * 60));
+    }
+    etapes.push(texte.replace(/^\d{1,2}\s*[.)]\s+/, ""));
+    durees.push(secondes);
+  }
+  return { etapes: etapes.slice(0, LIMITES_FICHE.etapes), durees: durees.slice(0, LIMITES_FICHE.etapes) };
+}
+
+// Aperçu de la photo dans le formulaire (même photo que la fiche)
+function majPhotoEdition(el) {
+  if (!el || idActions !== el.id) return;
+  const photo = adressePhotoFiche(el) || (el.images ? el.images[0] : null);
+  editionPhotoApercu.replaceChildren(creerVignette(photo, el.type));
+  const aSaPhoto = Boolean(el.photoId || el.photoPerso);
+  editionChangerPhoto.textContent = photo ? "Changer la photo" : "Ajouter une photo";
+  editionChangerPhoto.disabled = false;
+  editionRetirerPhoto.hidden = !aSaPhoto;
+}
+
+// Ouvre l'écran Modifier, rempli avec la fiche
 function ouvrirEdition(id) {
   const el = elements.find((e) => e.id === id);
   if (!el) return;
   idActions = id;
   annulerConfirmation();
+  actionsTitre.textContent = el.titre;
   editionTitre.value = el.titre;
   remplirTypes();
   editionType.value = el.type;
-  // Lien, note et contenu gardés même pour un autre type : on les retrouve
-  // en repassant en Recette
+  editionSource.value = el.source || "";
   editionLien.value = el.lien || "";
   editionNote.value = el.note || "";
   editionPortions.value = el.portions || "";
   editionPreparation.value = el.tempsPreparation || "";
   editionCuisson.value = el.tempsCuisson || "";
+  editionNiveau.value = el.niveau || "";
   editionVerre.value = el.verre || "";
+  editionGlace.value = el.glace || "";
+  editionGarniture.value = el.garniture || "";
   editionMethode.value = el.methode || "";
   editionAlcool.value = el.alcoolBase || "";
+  editionAvecAlcool.value = el.avecAlcool === undefined ? "" : el.avecAlcool ? "oui" : "non";
   editionIngredients.value = (el.ingredients || []).join("\n");
-  editionEtapes.value = (el.etapes || []).join("\n");
+  const durees = el.etapesDurees || [];
+  editionEtapes.replaceChildren(...(el.etapes || []).map((etape, i) =>
+    etape.startsWith("#")
+      ? creerLigneEtape(etape.replace(/^#+\s*/, ""), null, true)
+      : creerLigneEtape(etape, durees[i] || null, false)));
   editionErreur.hidden = true;
   majEditionRecette();
-  actionsTitre.textContent = el.titre;
-  actionsNote.hidden = true;
-  actionsBoutons.hidden = true;
-  actionsEdition.hidden = false;
-  if (!panneauActions.open) panneauActions.showModal();
-  panneauActions.scrollTop = 0;
-  editionTitre.focus();
+  majPhotoEdition(el);
+  if (!pageEdition.open) pageEdition.showModal();
+  pageEdition.scrollTop = 0;
+  // Hauteur des zones de texte une fois l'écran affiché
+  for (const champ of pageEdition.querySelectorAll(".edition-etape-texte")) ajusterHauteurChamp(champ);
 }
-
-actionsModifier.addEventListener("click", () => {
-  editionDepuisFiche = false;
-  ouvrirEdition(idActions);
-});
 
 // Un champ nombre : vide → undefined ; entier entre min et max → le nombre ;
 // sinon NaN (erreur à afficher)
@@ -569,8 +674,8 @@ function lireLignes(champ, max, longueur) {
     .map((ligne) => ligne.slice(0, longueur));
 }
 
-// Une zone de texte d'étapes → la liste des étapes. Une étape tapée
-// « 1. Mélanger » devient « Mélanger » (la liste est déjà numérotée) ;
+// Une zone de texte d'étapes → la liste des étapes (écran « Photos et
+// texte »). Une étape tapée « 1. Mélanger » devient « Mélanger » ;
 // « #Titre » devient « # Titre » (titre de partie)
 function lireChampEtapes(champ) {
   return lireLignes(champ, LIMITES_FICHE.etapes, LIMITES_FICHE.longueurEtape)
@@ -578,89 +683,83 @@ function lireChampEtapes(champ) {
     .filter((e) => e !== "# " && e !== "");
 }
 
+const court = (champ) => champ.value.trim().slice(0, LIMITES_FICHE.champCourt);
+
 actionsEdition.addEventListener("submit", (evenement) => {
   evenement.preventDefault();
   const nouveauTitre = editionTitre.value.trim();
-  if (nouveauTitre === "" || idActions === null) return;
+  if (idActions === null) return;
+  if (nouveauTitre === "") {
+    afficherMessage("Donne un titre à la fiche.", false, editionErreur);
+    editionTitre.focus();
+    return;
+  }
   const type = editionType.value;
-  let recette = null;
-  if (estFiche(type)) {
-    const texteLien = editionLien.value.trim();
-    const lien = lienValide(texteLien);
-    if (texteLien !== "" && !lien) {
-      afficherMessage("Ce lien n'est pas valide : il doit commencer par http:// ou https://.", false, editionErreur);
-      return;
-    }
-    const portions = lireEntier(editionPortions, LIMITES_FICHE.portionsMax);
-    const preparation = lireEntier(editionPreparation, LIMITES_FICHE.minutesMax);
-    const cuisson = lireEntier(editionCuisson, LIMITES_FICHE.minutesMax);
-    if (Number.isNaN(portions)) {
-      afficherMessage(`Portions : un nombre entier entre 1 et ${LIMITES_FICHE.portionsMax}.`, false, editionErreur);
-      return;
-    }
-    if (Number.isNaN(preparation) || (type === "recette" && Number.isNaN(cuisson))) {
-      afficherMessage("Temps : un nombre entier de minutes (ou rien).", false, editionErreur);
-      return;
-    }
-    const ingredients = lireLignes(editionIngredients, LIMITES_FICHE.ingredients, LIMITES_FICHE.longueurIngredient);
-    const ancien = elements.find((e) => e.id === idActions) || {};
-    recette = {
-      lien,
-      note: editionNote.value.trim().slice(0, LONGUEUR_MAX_NOTE),
-      portions,
-      tempsPreparation: preparation,
-      ingredients,
-      // Fiche créée avec l'IA : les lignes inchangées gardent leur détail
-      ingredientsDetail: detailPourLignes(ingredients, ancien.ingredients, ancien.ingredientsDetail),
-      etapes: lireChampEtapes(editionEtapes),
-    };
-    // Durées des étapes : chaque étape restée identique garde la sienne
-    recette.etapesDurees = detailPourLignes(recette.etapes, ancien.etapes, ancien.etapesDurees);
-    // Seuls les champs visibles sont modifiés : la cuisson d'une recette
-    // passée en cocktail (ou l'inverse) est gardée
-    if (type === "recette") recette.tempsCuisson = cuisson;
-    if (type === "cocktail") {
-      recette.verre = editionVerre.value.trim().slice(0, LIMITES_FICHE.champCourt);
-      recette.methode = editionMethode.value.trim().slice(0, LIMITES_FICHE.champCourt);
-      recette.alcoolBase = editionAlcool.value.trim().slice(0, LIMITES_FICHE.champCourt);
-    }
+  const texteLien = editionLien.value.trim();
+  const lien = lienValide(texteLien);
+  if (texteLien !== "" && !lien) {
+    afficherMessage("Ce lien n'est pas valide : il doit commencer par http:// ou https://.", false, editionErreur);
+    editionLien.focus();
+    return;
+  }
+  const portions = lireEntier(editionPortions, LIMITES_FICHE.portionsMax);
+  const preparation = lireEntier(editionPreparation, LIMITES_FICHE.minutesMax);
+  const cuisson = lireEntier(editionCuisson, LIMITES_FICHE.minutesMax);
+  if (Number.isNaN(portions)) {
+    afficherMessage(`${type === "cocktail" ? "Verres" : "Portions"} : un nombre entier entre 1 et ${LIMITES_FICHE.portionsMax}.`, false, editionErreur);
+    return;
+  }
+  if (Number.isNaN(preparation) || (type === "recette" && Number.isNaN(cuisson))) {
+    afficherMessage("Temps : un nombre entier de minutes (ou rien).", false, editionErreur);
+    return;
+  }
+  const lus = lireLignesEtapes();
+  if (lus.erreur) {
+    afficherMessage(lus.erreur, false, editionErreur);
+    return;
+  }
+  const ingredients = lireLignes(editionIngredients, LIMITES_FICHE.ingredients, LIMITES_FICHE.longueurIngredient);
+  const ancien = elements.find((e) => e.id === idActions) || {};
+  const recette = {
+    lien,
+    note: editionNote.value.trim().slice(0, LONGUEUR_MAX_NOTE),
+    source: court(editionSource),
+    portions,
+    tempsPreparation: preparation,
+    ingredients,
+    // Fiche créée avec l'IA : les lignes inchangées gardent leur détail
+    ingredientsDetail: detailPourLignes(ingredients, ancien.ingredients, ancien.ingredientsDetail),
+    etapes: lus.etapes,
+    etapesDurees: lus.durees.some(Boolean) ? lus.durees : undefined,
+  };
+  // Seuls les champs du type choisi sont modifiés : la cuisson d'une recette
+  // passée en cocktail (ou l'inverse) est gardée
+  if (type === "recette") {
+    recette.tempsCuisson = cuisson;
+    recette.niveau = editionNiveau.value || undefined;
+  }
+  if (type === "cocktail") {
+    recette.verre = court(editionVerre);
+    recette.glace = court(editionGlace);
+    recette.garniture = court(editionGarniture);
+    recette.methode = court(editionMethode);
+    recette.alcoolBase = court(editionAlcool);
+    recette.avecAlcool = editionAvecAlcool.value === "" ? undefined : editionAvecAlcool.value === "oui";
   }
   modifier(idActions, nouveauTitre, type, recette);
   fermerActions();
-  // Page de la fiche ouverte derrière : on la redessine (ou on la ferme si
-  // l'élément n'est plus une recette ni un cocktail)
+  // Page de la fiche ouverte derrière : on la redessine
   if (pageFiche.open) {
     personnesFiche = null; // repart des portions (peut-être modifiées)
     afficherFiche();
   }
 });
 
-document.getElementById("edition-annuler").addEventListener("click", () => {
-  if (editionDepuisFiche) {
-    fermerActions();
-    return;
-  }
-  actionsEdition.hidden = true;
-  actionsBoutons.hidden = false;
-});
+document.getElementById("edition-annuler").addEventListener("click", fermerActions);
 
-// « Supprimer » : premier appui → « Confirmer la suppression ? » pendant
-// 3 secondes ; deuxième appui → l'élément est supprimé définitivement
-actionsSupprimer.addEventListener("click", () => {
-  if (idActions === null) return;
-  if (actionsSupprimer.classList.contains("confirmer")) {
-    supprimer(idActions);
-    fermerActions();
-    return;
-  }
-  actionsSupprimer.textContent = "Confirmer la suppression ?";
-  actionsSupprimer.classList.add("confirmer");
-  minuteurConfirmation = setTimeout(annulerConfirmation, 3000);
-});
-
-// « Supprimer la fiche » (écran Modifier) : même principe en 2 appuis ;
-// la fiche ouverte derrière se ferme aussi
-const editionSupprimer = document.getElementById("edition-supprimer");
+// « Supprimer la fiche » : premier appui → « Confirmer la suppression ? »
+// pendant 3 secondes ; deuxième appui → la fiche est supprimée
+// définitivement, et la fiche ouverte derrière se ferme aussi
 editionSupprimer.addEventListener("click", () => {
   if (idActions === null) return;
   if (editionSupprimer.classList.contains("confirmer")) {
@@ -674,9 +773,12 @@ editionSupprimer.addEventListener("click", () => {
   minuteurConfirmation = setTimeout(annulerConfirmation, 3000);
 });
 
-document.getElementById("actions-annuler").addEventListener("click", fermerActions);
-// Échap (clavier) ferme aussi le panneau : on remet tout à zéro
-panneauActions.addEventListener("close", () => {
+// Photo : mêmes actions que sur la fiche (enregistrées tout de suite)
+editionChangerPhoto.addEventListener("click", () => ficheChangerPhoto.click());
+editionRetirerPhoto.addEventListener("click", () => ficheRetirerPhoto.click());
+
+// Échap (clavier) ferme aussi l'écran : on remet tout à zéro
+pageEdition.addEventListener("close", () => {
   annulerConfirmation();
   idActions = null;
 });
@@ -689,7 +791,6 @@ function fermerSurVoile(panneau, fermer) {
     if (evenement.target === panneau) fermer();
   });
 }
-fermerSurVoile(panneauActions, fermerActions);
 
 // --- 4 ter. Le panneau Réglages (descend du haut de l'écran) ---
 const panneauReglages = document.getElementById("panneau-reglages");
@@ -1723,6 +1824,7 @@ function majBoutonsPhotoFiche(el) {
   ficheAjouterPhoto.textContent = "Ajouter une photo";
   ficheAjouterPhoto.disabled = false;
   ficheRetirerPhoto.hidden = !aSaPhoto;
+  majPhotoEdition(el); // écran Modifier ouvert : même photo
 }
 
 // Remplace la photo de la fiche (null : la retire) ; renvoie true si c'est fait
@@ -1761,7 +1863,7 @@ ficheFichierPhoto.addEventListener("change", async () => {
   const id = idFiche;
   const el = elements.find((e) => e.id === id);
   if (!fichier || !el) return;
-  for (const bouton of [ficheChangerPhoto, ficheAjouterPhoto]) {
+  for (const bouton of [ficheChangerPhoto, ficheAjouterPhoto, editionChangerPhoto]) {
     bouton.disabled = true;
     bouton.textContent = "Préparation de la photo…";
   }

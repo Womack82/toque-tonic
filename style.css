@@ -378,13 +378,10 @@ button, input, select, textarea, .etiquette, .badge {
 /* Panneau d'actions : collé en bas, coins du haut arrondis */
 /* --clavier-ecran : hauteur du clavier de l'iPhone (app.js) ; le panneau
    reste posé juste au-dessus quand on modifie une fiche */
-.panneau-bas { margin: auto auto var(--clavier-ecran, 0px); border-radius: 30px 30px 0 0; }
-.panneau-bas .panneau-contenu { padding-bottom: calc(env(safe-area-inset-bottom) + 16px); }
 
 /* Animations d'ouverture : descend du haut / monte du bas avec un léger
    fondu, voile en fondu. Seulement transform et opacity : c'est fluide. */
 .panneau-haut[open] { animation: descendre 260ms var(--courbe); }
-.panneau-bas[open] { animation: monter 260ms var(--courbe); }
 .panneau[open]::backdrop { animation: fondu 220ms ease-out; }
 @keyframes descendre { from { transform: translateY(-100%); opacity: 0.4; } }
 @keyframes monter { from { transform: translateY(100%); opacity: 0.4; } }
@@ -485,13 +482,6 @@ button, input, select, textarea, .etiquette, .badge {
 /* Listes dans les panneaux : cartes blanches, sans ombre */
 .panneau .mentions { margin-top: 14px; }
 
-/* Panneau d'actions : titre de l'élément puis grands boutons */
-#actions-titre {
-  margin: 4px 0 14px;
-  text-align: center;
-  font-size: 1.05rem;
-  word-break: break-word;
-}
 .boutons-actions { display: flex; flex-direction: column; gap: 8px; }
 .bouton-action {
   display: flex;
@@ -870,15 +860,6 @@ form.edition textarea {
 .bouton-contour.mise-en-avant:active { background: var(--accent-survol); border-color: var(--accent-survol); }
 #message-import { margin: 0; }
 
-/* Panneau d'actions : note de la recette sous le titre */
-.actions-note {
-  margin: -6px 4px 14px;
-  text-align: center;
-  font-size: 14px;
-  color: var(--gris);
-  white-space: pre-line; /* garde les retours à la ligne de la note */
-  word-break: break-word;
-}
 .edition-recette { display: flex; flex-direction: column; gap: 6px; }
 form.edition .message { margin: 4px 0 0; }
 
@@ -1251,6 +1232,122 @@ form.edition .message { margin: 4px 0 0; }
   border-top: 1px solid var(--line);
   background: var(--background);
 }
+
+/* ===== Écran Modifier (#page-edition) ===== */
+.edition-contenu { padding: 0 var(--screen-margin); }
+.edition-titre-ecran { margin: var(--space-2) 0 0; text-align: left; overflow-wrap: anywhere; }
+.edition-section {
+  display: flex;
+  flex-direction: column;
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--line);
+}
+.edition-section-titre { margin: 0 0 var(--space-2); color: var(--primary); }
+.edition-aide { margin: 0 0 var(--space-3); font-size: 15px; line-height: 22px; }
+.edition-etiquette {
+  margin: var(--space-3) 0 var(--space-1);
+  color: var(--ink-muted);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+/* Champs : fond surface, légère ombre intérieure, texte 17 px (l'iPhone
+   ne zoome pas sur un champ de 16 px ou plus) */
+.champ-saisie {
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-3);
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  background: var(--surface);
+  box-shadow: var(--shadow-inset);
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: 17px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.champ-saisie::placeholder { color: var(--ink-muted); font-style: italic; opacity: 1; }
+.champ-saisie:focus,
+.champ-saisie:focus-visible { outline: none; border-color: var(--primary); }
+textarea.champ-saisie { resize: vertical; line-height: 26px; }
+select.champ-saisie {
+  padding-right: var(--space-8);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2357423B' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 20px;
+}
+.edition-grille { display: grid; grid-template-columns: 1fr 1fr; column-gap: var(--space-3); }
+.edition-grille > div { display: flex; flex-direction: column; min-width: 0; }
+.edition-grille .edition-etiquette { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Photo : aperçu de 104 px et boutons à côté */
+.edition-photo { display: flex; align-items: center; gap: var(--space-4); margin-top: var(--space-2); }
+.edition-photo-apercu { display: flex; flex-shrink: 0; }
+.edition-photo-boutons { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-1); }
+.edition-photo + .edition-aide { margin: var(--space-3) 0 0; }
+
+/* Étapes : une ligne par étape, numérotée (compteur CSS) */
+.edition-etapes { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding: 0; list-style: none; counter-reset: etape; }
+.edition-etape {
+  display: grid;
+  grid-template-columns: 28px 1fr auto var(--touch) var(--touch);
+  grid-template-areas:
+    "numero texte texte texte texte"
+    ".      duree vide  monter retirer";
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-card);
+  background: var(--surface-low);
+}
+.edition-etape:not(.edition-partie) { counter-increment: etape; }
+.edition-etape::before {
+  content: counter(etape);
+  grid-area: numero;
+  align-self: start;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 10px;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: var(--text-label);
+}
+.edition-etape .edition-etape-texte { grid-area: texte; min-height: 48px; resize: none; overflow: hidden; background: var(--card); }
+.edition-duree { grid-area: duree; display: flex; align-items: center; gap: var(--space-2); color: var(--ink-muted); }
+.edition-etape .edition-duree-champ { width: 72px; min-height: 44px; padding: var(--space-2); text-align: center; background: var(--card); }
+.edition-etape-monter { grid-area: monter; }
+.edition-etape-retirer { grid-area: retirer; }
+.edition-etape .btn-icone { border-color: transparent; background: none; color: var(--ink-muted); }
+.edition-etape-monter .icone { transform: rotate(-90deg); }
+.edition-etape:first-child .edition-etape-monter { visibility: hidden; }
+/* Titre de partie : pas de numéro ni de durée */
+.edition-partie {
+  grid-template-columns: 1fr var(--touch) var(--touch);
+  grid-template-areas: "texte monter retirer";
+  background: none;
+  padding-left: 0;
+}
+.edition-partie::before { content: none; }
+.edition-partie .edition-etape-texte {
+  font: var(--text-label);
+  font-size: 14px;
+  line-height: 24px;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--primary);
+}
+.edition-etapes-boutons { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-3); }
+
+.edition-supprimer { margin-top: var(--space-8); }
+.edition-supprimer.confirmer { background: var(--error); border-color: var(--error); color: var(--on-primary); }
+.edition-bas .message { margin: 0 0 var(--space-2); }
 
 /* ===== Mode Cuisine (#mode-cuisine) ===== */
 .cuisine-contenu {

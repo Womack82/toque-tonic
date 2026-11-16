@@ -251,80 +251,150 @@
     </div>
   </dialog>
 
-  <!-- Panneau d'actions : monte du bas quand on touche une carte -->
-  <dialog id="panneau-actions" class="panneau panneau-bas" aria-labelledby="actions-titre">
-    <div class="panneau-contenu">
-      <h2 id="actions-titre"></h2>
-      <!-- Note d'une recette (s'il y en a une) -->
-      <p id="actions-note" class="actions-note" hidden></p>
-      <div id="actions-boutons" class="boutons-actions">
-        <a id="actions-lien" class="bouton-action" target="_blank" rel="noopener" hidden>Ouvrir le lien ↗</a>
-        <button type="button" id="actions-modifier" class="bouton-action">Modifier</button>
-        <button type="button" id="actions-supprimer" class="bouton-action supprimer">Supprimer</button>
-        <button type="button" id="actions-annuler" class="bouton-action secondaire">Annuler</button>
+  <!-- Écran Modifier (crayon de la fiche) : formulaire complet, plein écran.
+       Rien n'est enregistré avant « Enregistrer », sauf la photo (tout de suite). -->
+  <dialog id="page-edition" class="fiche-page page-edition" aria-labelledby="edition-barre-titre">
+    <form id="actions-edition" class="fiche-contenu edition-contenu" novalidate tabindex="-1" autofocus>
+      <div class="fiche-barre">
+        <button type="button" id="edition-annuler" class="btn-icone" aria-label="Annuler les modifications">
+          <svg data-icone="fermer"></svg>
+        </button>
+        <p id="edition-barre-titre" class="t-libelle fiche-barre-titre">Modifier</p>
+        <span class="cuisine-barre-place" aria-hidden="true"></span>
       </div>
-      <!-- Modification : le titre et le type se changent ici -->
-      <form id="actions-edition" class="edition" hidden>
-        <label for="edition-titre" class="etiquette">Titre</label>
-        <input id="edition-titre" type="text" required>
-        <label for="edition-type" class="etiquette">Type</label>
-        <select id="edition-type"></select>
-        <!-- Recette et cocktail seulement : lien, note et contenu de la fiche -->
-        <div id="edition-recette" class="edition-recette" hidden>
-          <label for="edition-lien" class="etiquette">Lien (facultatif)</label>
-          <input id="edition-lien" type="url" inputmode="url" autocomplete="off"
-                 autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="https://…">
-          <label for="edition-note" class="etiquette">Note (facultatif)</label>
-          <textarea id="edition-note" rows="3" maxlength="1000"></textarea>
+      <h2 id="actions-titre" class="t-section edition-titre-ecran"></h2>
 
-          <div class="edition-colonnes">
-            <div class="edition-champ">
-              <label for="edition-portions" class="etiquette">Portions</label>
-              <input id="edition-portions" type="number" inputmode="numeric" min="1" max="100" placeholder="4">
-            </div>
-            <div class="edition-champ">
-              <label for="edition-preparation" class="etiquette">Préparation (min)</label>
-              <input id="edition-preparation" type="number" inputmode="numeric" min="1" max="10000">
-            </div>
-            <!-- Recette : cuisson -->
-            <div id="edition-champ-cuisson" class="edition-champ">
-              <label for="edition-cuisson" class="etiquette">Cuisson (min)</label>
-              <input id="edition-cuisson" type="number" inputmode="numeric" min="1" max="10000">
-            </div>
+      <!-- Photo : enregistrée tout de suite (comme sur la fiche) -->
+      <section class="edition-section" aria-labelledby="edition-titre-photo">
+        <h3 id="edition-titre-photo" class="t-libelle edition-section-titre">Photo</h3>
+        <div class="edition-photo">
+          <span id="edition-photo-apercu" class="edition-photo-apercu"></span>
+          <div class="edition-photo-boutons">
+            <button type="button" id="edition-changer-photo" class="btn btn-secondaire">Ajouter une photo</button>
+            <button type="button" id="edition-retirer-photo" class="btn btn-texte" hidden>Retirer la photo</button>
           </div>
-          <!-- Cocktail : verre, méthode, alcool de base (avec suggestions) -->
-          <div id="edition-champs-cocktail" class="edition-recette">
-            <label for="edition-verre" class="etiquette">Verre</label>
-            <input id="edition-verre" type="text" maxlength="100" list="suggestions-verres" placeholder="Tumbler, coupe…">
-            <label for="edition-methode" class="etiquette">Méthode</label>
-            <input id="edition-methode" type="text" maxlength="100" list="suggestions-methodes" placeholder="Shaker, direct dans le verre…">
-            <label for="edition-alcool" class="etiquette">Alcool de base</label>
-            <input id="edition-alcool" type="text" maxlength="100" placeholder="Rhum, gin, vodka…">
-            <datalist id="suggestions-verres">
-              <option value="Tumbler"></option><option value="Old fashioned"></option>
-              <option value="Highball"></option><option value="Coupe"></option>
-              <option value="Verre à martini"></option><option value="Flûte"></option>
-              <option value="Verre à vin"></option><option value="Mug en cuivre"></option>
-            </datalist>
-            <datalist id="suggestions-methodes">
-              <option value="Shaker"></option><option value="Direct dans le verre"></option>
-              <option value="Verre à mélange"></option><option value="Blender"></option>
-            </datalist>
-          </div>
-          <label for="edition-ingredients" class="etiquette">Ingrédients (un par ligne)</label>
-          <textarea id="edition-ingredients" rows="5" placeholder="200 g de farine&#10;3 œufs"></textarea>
-          <label for="edition-etapes" class="etiquette">Étapes (une par ligne ; « # Titre » pour une partie)</label>
-          <textarea id="edition-etapes" rows="6" placeholder="# La pâte&#10;Mélanger la farine et les œufs.&#10;Laisser reposer 1 h."></textarea>
         </div>
+        <p class="t-italique edition-aide">La photo est enregistrée dès que tu la choisis.</p>
+      </section>
+
+      <section class="edition-section" aria-labelledby="edition-titre-general">
+        <h3 id="edition-titre-general" class="t-libelle edition-section-titre">L'essentiel</h3>
+        <label for="edition-titre" class="edition-etiquette">Titre</label>
+        <input id="edition-titre" class="champ-saisie" type="text" maxlength="200" required autocapitalize="sentences">
+        <label for="edition-type" class="edition-etiquette">Type</label>
+        <select id="edition-type" class="champ-saisie"></select>
+        <label for="edition-source" class="edition-etiquette">D'où ça vient (facultatif)</label>
+        <input id="edition-source" class="champ-saisie" type="text" maxlength="100" autocapitalize="sentences"
+               placeholder="Un resto, un livre, un ami…">
+        <label for="edition-lien" class="edition-etiquette">Lien (facultatif)</label>
+        <input id="edition-lien" class="champ-saisie" type="url" inputmode="url" autocomplete="off"
+               autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="https://…">
+      </section>
+
+      <!-- En bref : portions, temps ; niveau (recette) ; verre, glace… (cocktail) -->
+      <section id="edition-recette" class="edition-section" aria-labelledby="edition-titre-bref">
+        <h3 id="edition-titre-bref" class="t-libelle edition-section-titre">En bref</h3>
+        <div class="edition-grille">
+          <div>
+            <label for="edition-portions" id="edition-etiquette-portions" class="edition-etiquette">Portions</label>
+            <input id="edition-portions" class="champ-saisie" type="number" inputmode="numeric" min="1" max="100" placeholder="4">
+          </div>
+          <div>
+            <label for="edition-preparation" id="edition-etiquette-preparation" class="edition-etiquette">Préparation (min)</label>
+            <input id="edition-preparation" class="champ-saisie" type="number" inputmode="numeric" min="1" max="10000">
+          </div>
+          <div id="edition-champ-cuisson">
+            <label for="edition-cuisson" class="edition-etiquette">Cuisson (min)</label>
+            <input id="edition-cuisson" class="champ-saisie" type="number" inputmode="numeric" min="1" max="10000">
+          </div>
+          <div id="edition-champ-niveau">
+            <label for="edition-niveau" class="edition-etiquette">Niveau</label>
+            <select id="edition-niveau" class="champ-saisie">
+              <option value="">Non précisé</option>
+              <option value="facile">Facile</option>
+              <option value="moyen">Moyen</option>
+              <option value="difficile">Difficile</option>
+            </select>
+          </div>
+        </div>
+        <!-- Cocktail : verre, glace, garniture, méthode, alcool -->
+        <div id="edition-champs-cocktail" class="edition-grille">
+          <div>
+            <label for="edition-verre" class="edition-etiquette">Verre</label>
+            <input id="edition-verre" class="champ-saisie" type="text" maxlength="100" list="suggestions-verres" placeholder="Tumbler, coupe…">
+          </div>
+          <div>
+            <label for="edition-glace" class="edition-etiquette">Glace</label>
+            <input id="edition-glace" class="champ-saisie" type="text" maxlength="100" list="suggestions-glaces" placeholder="Glaçons, pilée…">
+          </div>
+          <div>
+            <label for="edition-garniture" class="edition-etiquette">Garniture</label>
+            <input id="edition-garniture" class="champ-saisie" type="text" maxlength="100" placeholder="Zeste, menthe…">
+          </div>
+          <div>
+            <label for="edition-methode" class="edition-etiquette">Méthode</label>
+            <input id="edition-methode" class="champ-saisie" type="text" maxlength="100" list="suggestions-methodes" placeholder="Shaker…">
+          </div>
+          <div>
+            <label for="edition-alcool" class="edition-etiquette">Alcool de base</label>
+            <input id="edition-alcool" class="champ-saisie" type="text" maxlength="100" placeholder="Rhum, gin…">
+          </div>
+          <div>
+            <label for="edition-avec-alcool" class="edition-etiquette">Alcool</label>
+            <select id="edition-avec-alcool" class="champ-saisie">
+              <option value="">Non précisé</option>
+              <option value="oui">Contient de l'alcool</option>
+              <option value="non">Sans alcool</option>
+            </select>
+          </div>
+          <datalist id="suggestions-verres">
+            <option value="Tumbler"></option><option value="Old fashioned"></option>
+            <option value="Highball"></option><option value="Coupe"></option>
+            <option value="Verre à martini"></option><option value="Flûte"></option>
+            <option value="Verre à vin"></option><option value="Mug en cuivre"></option>
+          </datalist>
+          <datalist id="suggestions-glaces">
+            <option value="Glaçons"></option><option value="Gros glaçon"></option>
+            <option value="Glace pilée"></option><option value="Sans glace"></option>
+          </datalist>
+          <datalist id="suggestions-methodes">
+            <option value="Shaker"></option><option value="Direct dans le verre"></option>
+            <option value="Verre à mélange"></option><option value="Blender"></option>
+          </datalist>
+        </div>
+      </section>
+
+      <section class="edition-section" aria-labelledby="edition-titre-ingredients">
+        <h3 id="edition-titre-ingredients" class="t-libelle edition-section-titre">Ingrédients</h3>
+        <label for="edition-ingredients" class="edition-etiquette">Un par ligne, la quantité au début</label>
+        <textarea id="edition-ingredients" class="champ-saisie" rows="6" placeholder="200 g de farine&#10;3 œufs"></textarea>
+      </section>
+
+      <!-- Étapes : une ligne par étape, avec sa durée facultative (minuteur) -->
+      <section class="edition-section" aria-labelledby="edition-titre-etapes">
+        <h3 id="edition-titre-etapes" class="t-libelle edition-section-titre">Étapes</h3>
+        <p class="t-italique edition-aide">La durée, en minutes, ajoute un minuteur à l'étape dans le mode cuisine.</p>
+        <ol id="edition-etapes" class="edition-etapes"></ol>
+        <div class="edition-etapes-boutons">
+          <button type="button" id="edition-ajouter-etape" class="btn btn-secondaire"><svg data-icone="plus"></svg>Une étape</button>
+          <button type="button" id="edition-ajouter-partie" class="btn btn-texte"><svg data-icone="plus"></svg>Un titre de partie</button>
+        </div>
+      </section>
+
+      <section class="edition-section" aria-labelledby="edition-titre-notes">
+        <h3 id="edition-titre-notes" class="t-libelle edition-section-titre">Mes notes</h3>
+        <label for="edition-note" class="visuellement-cache">Mes notes</label>
+        <textarea id="edition-note" class="champ-saisie" rows="3" maxlength="1000"
+                  placeholder="Ce que tu changerais la prochaine fois…"></textarea>
+      </section>
+
+      <button type="button" id="edition-supprimer" class="btn btn-danger btn-bloc edition-supprimer">Supprimer la fiche</button>
+
+      <div class="fiche-bas edition-bas">
         <p id="edition-erreur" class="message erreur" role="status" hidden></p>
-        <div class="boutons-actions">
-          <button type="submit" class="bouton-action principal">Enregistrer</button>
-          <button type="button" id="edition-annuler" class="bouton-action secondaire">Annuler</button>
-          <!-- Supprimer (déplacé ici depuis la fiche, v1.7) : 2 appuis -->
-          <button type="button" id="edition-supprimer" class="bouton-action supprimer">Supprimer la fiche</button>
-        </div>
-      </form>
-    </div>
+        <button type="submit" class="btn btn-principal btn-bloc btn-grand">Enregistrer</button>
+      </div>
+    </form>
   </dialog>
 
   <!-- Page de fiche (recette, cocktail) : s'ouvre quand on touche la carte.
