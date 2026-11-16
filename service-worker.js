@@ -7,13 +7,14 @@
 // téléphone continuera d'utiliser l'ancienne copie :
 // chaque changement ajoute 1 au second numéro : v1.0 → v1.1 → v1.2…
 // ⚠️ Change aussi VERSION en haut de app.js (affichée dans Réglages).
-const NOM_CACHE = "toque-tonic-v1.2";
+const NOM_CACHE = "toque-tonic-v1.3";
 
 // ⚠️ Si un seul de ces fichiers est introuvable, rien n'est mis en cache
 // (l'app ne marchera pas hors ligne) : vérifier chaque chemin.
 const FICHIERS = [
   "./",
   "index.html",
+  "theme.css",
   "style.css",
   "recettes.js",
   "ia.js",
@@ -21,6 +22,10 @@ const FICHIERS = [
   "app.js",
   "notes.js",
   "manifest.json",
+  // Polices (dossier fonts)
+  "fonts/newsreader.woff2",
+  "fonts/newsreader-italique.woff2",
+  "fonts/hanken-grotesk.woff2",
   // Icônes de l'app (dossier icons). Pour changer l'icône, remplacer
   // ces fichiers en gardant les mêmes noms et tailles (voir TODO.md).
   "icons/icone-180.png",

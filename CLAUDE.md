@@ -55,17 +55,29 @@
 
 - Mobile d'abord : boutons et zones à toucher d'au moins 44 px, texte lisible
   sans zoomer.
-- Palette de couleurs :
+- Direction artistique « Warm Editorial Gastronomy » (depuis v1.3) : carnet
+  de cuisine ancien, papier crème, encre chaude ; ni ombres dures, ni
+  dégradés, ni transparence floue. Interface en français, au tutoiement,
+  sans emoji.
+- **Tous les réglages visuels sont dans `theme.css`** (couleurs, polices,
+  tailles de texte, espacements, rayons, ombres). Ne jamais écrire une
+  couleur en dur ailleurs : utiliser `var(--…)`.
+- Couleurs principales :
 
-  | Rôle                        | Couleur   | Texte posé dessus          |
-  |-----------------------------|-----------|----------------------------|
-  | Fond                        | `#e9eef5` | —                          |
-  | Texte principal             | `#0a2342` | —                          |
-  | Texte secondaire            | `#4a5d78` | —                          |
-  | Accent                      | `#ff6a00` | `#0a2342` (jamais blanc)   |
-  | Survol (de l'accent)        | `#ff9b54` | `#0a2342`                  |
-  | Actif et secondaire         | `#2c6e9a` | blanc                      |
+  | Rôle                                   | Token                         | Valeur    |
+  |----------------------------------------|-------------------------------|-----------|
+  | Fond (parchemin)                       | `--background`                | `#FFF8F3` |
+  | Blocs, encarts, champs                 | `--surface-low/surface/-high` | `#FAF2EB` / `#F4EDE6` / `#E9E1DA` |
+  | Cartes                                 | `--card`                      | `#FFFFFF` |
+  | Texte principal / secondaire           | `--ink` / `--ink-muted`       | `#1E1B17` / `#57423B` |
+  | Terracotta (actions, onglet actif)     | `--primary` (texte blanc)     | `#9F3C16` |
+  | Sauge (RECETTE, boutons secondaires)   | `--sage`                      | `#506354` |
+  | Ambre (COCKTAIL, métadonnées, minuteur)| `--amber`                     | `#8D4B00` |
+  | Erreur                                 | `--error`                     | `#BA1A1A` |
 
+- Polices (fichiers dans `fonts/`, gardés hors ligne) : **Newsreader** pour
+  les titres et le texte, **Hanken Grotesk** pour les libellés, boutons,
+  quantités et chiffres. Contraste du texte d'au moins 4.5:1.
 - Animations légères, de 150 à 280 ms, et désactivées quand l'option
   « réduire les animations » est activée sur l'appareil
   (`@media (prefers-reduced-motion: reduce)`).

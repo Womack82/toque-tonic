@@ -1,26 +1,29 @@
-/* ---------- Couleurs et réglages généraux ---------- */
-/* Palette de l'app. Règle : jamais de texte orange sur fond clair
-   (pas assez lisible) ; sur l'orange, le texte est bleu marine. */
+/* ---------- Réglages généraux ---------- */
+/* Couleurs, polices, tailles, rayons et ombres : dans theme.css. */
 :root {
-  --fond: #e9eef5;          /* fond uni de secours (sous le dégradé) */
-  --carte: #ffffff;
-  --texte: #0a2342;         /* texte et titres (bleu marine) */
-  --gris: #4a5d78;          /* texte secondaire */
-  --accent: #ff6a00;        /* accent principal (orange), texte marine dessus */
-  --accent-survol: #ff9b54; /* survol et appui de l'accent ; icônes des vignettes */
-  --bleu: #2c6e9a;          /* éléments actifs et secondaires, texte blanc dessus */
-  --bleu-pale: rgba(44, 110, 154, 0.14); /* pastilles, onglet actif */
-  --bouton-bord: #c9d4e2;   /* bordures discrètes */
-  --rouge: #b42318;         /* suppression */
-  --voile: rgba(10, 35, 66, 0.45); /* voile sombre derrière les panneaux */
-  --duree: 180ms;           /* durée des animations (entre 150 et 280 ms) */
-  --courbe: cubic-bezier(0.22, 1, 0.36, 1); /* ease-out doux */
+  /* Anciens noms, gardés pour ne pas tout réécrire d'un coup :
+     ils renvoient vers les couleurs de theme.css. Les écrans les
+     remplaceront peu à peu par les vrais noms (--ink, --primary…). */
+  --fond: var(--background);
+  --carte: var(--card);
+  --texte: var(--ink);
+  --gris: var(--ink-muted);
+  --accent: var(--primary);
+  --accent-survol: var(--primary-pressed);
+  --bleu: var(--primary);
+  --bleu-pale: var(--primary-tint);
+  --bouton-bord: var(--outline);
+  --rouge: var(--error);
+  --voile: var(--scrim);
+  --duree: var(--duration);
+  --courbe: var(--easing);
 
-  /* Effet « verre » : blanc translucide, bord clair, ombre douce */
-  --verre-fond: rgba(255, 255, 255, 0.65);
-  --verre-bord: 1px solid rgba(255, 255, 255, 0.9);
-  --verre-ombre: 0 8px 22px rgba(10, 35, 66, 0.09);
-  --verre-flou: blur(14px);
+  /* Ex-effet « verre » : la nouvelle DA n'a ni transparence ni flou,
+     ce sont des cartes blanches avec un filet et une ombre douce */
+  --verre-fond: var(--card);
+  --verre-bord: 1px solid var(--line);
+  --verre-ombre: var(--shadow-card);
+  --verre-flou: none;
 
   /* Distance entre le bas de l'écran et la barre du bas (au moins la
      zone de la barre d'accueil de l'iPhone) */
@@ -37,26 +40,12 @@ html { background: var(--fond); }
 
 body {
   margin: 0;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  color: var(--texte);
-  line-height: 1.4;
+  font: var(--text-body);
+  color: var(--ink);
+  background: var(--background);
   padding: 0 16px;
 }
 
-/* Fond : dégradé + 2 halos de couleur (bleu en haut à gauche, orange à
-   droite au milieu). Posé sur un calque fixe derrière tout : il ne bouge
-   pas quand la page défile (et ne coûte rien au défilement). */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    radial-gradient(70vmax 60vmax at -10% -5%, rgba(44, 110, 154, 0.26), transparent 60%),
-    radial-gradient(60vmax 55vmax at 110% 50%, rgba(255, 155, 84, 0.24), transparent 60%),
-    linear-gradient(170deg, #eef3fa, #dde8f5 55%, #e6ecf6);
-}
 
 main {
   max-width: 600px;
@@ -66,6 +55,12 @@ main {
 }
 
 h1, h2 { color: var(--texte); }
+
+/* Libellés, boutons et champs : Hanken Grotesk (chiffres tabulaires) */
+button, input, select, textarea, .etiquette, .badge {
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+}
 
 /* Icônes SVG dessinées au trait, de la couleur du texte autour */
 .icone-svg {
@@ -117,7 +112,7 @@ h1, h2 { color: var(--texte); }
 .entete-grand {
   margin: 0;
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -168,7 +163,7 @@ h1, h2 { color: var(--texte); }
   color: var(--bleu);
 }
 .carre-pastille .icone-svg { width: 16px; height: 16px; }
-.carre-nombre { font-size: 24px; font-weight: 800; line-height: 1.1; }
+.carre-nombre { font-size: 24px; font-weight: 500; line-height: 1.1; }
 .carre-libelle {
   max-width: 100%;
   font-size: 11px;
@@ -178,7 +173,7 @@ h1, h2 { color: var(--texte); }
   text-overflow: ellipsis;
 }
 
-.titre-section { margin: 26px 4px 12px; font-size: 18px; font-weight: 800; }
+.titre-section { margin: 26px 4px 12px; font-size: 18px; font-weight: 500; }
 
 /* ---------- Cartes de la liste ---------- */
 .liste { list-style: none; padding: 0; margin: 0; }
@@ -230,7 +225,7 @@ h1, h2 { color: var(--texte); }
   flex-shrink: 0;
   border-radius: 16px;
   object-fit: cover;
-  background: linear-gradient(160deg, var(--texte), var(--bleu));
+  background: var(--surface-high);
 }
 #liste .vignette { width: 56px; height: 80px; border-radius: 20px; }
 .vignette-vide {
@@ -269,14 +264,14 @@ h1, h2 { color: var(--texte); }
   height: 26px;
   border-radius: 50%;
   border: 2px solid var(--bleu);
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--card);
   transition: background-color 150ms ease-out, transform 150ms var(--courbe);
 }
 .rond .coche {
   width: 16px;
   height: 16px;
   fill: none;
-  stroke: white;
+  stroke: var(--on-primary);
   stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
@@ -333,11 +328,11 @@ h1, h2 { color: var(--texte); }
   margin: 0 auto;
   padding: 0 8px;
   border-radius: 36px;
-  background: rgba(255, 255, 255, 0.78);
+  background: var(--card);
   border: var(--verre-bord);
-  box-shadow: 0 10px 28px rgba(10, 35, 66, 0.14);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  box-shadow: var(--shadow-bar);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 /* Bouton catégorie : 44 × 48, icône 24 px grise */
 .onglet {
@@ -355,7 +350,7 @@ h1, h2 { color: var(--texte); }
 .onglet-icone { display: flex; }
 .onglet-icone .icone-svg { width: 24px; height: 24px; }
 /* Catégorie affichée : fond bleu pâle, icône bleue */
-.onglet.actif { background: rgba(44, 110, 154, 0.15); color: var(--bleu); }
+.onglet.actif { background: var(--primary-tint); color: var(--primary); }
 
 /* Bouton Accueil : se démarque, toujours le même style (actif ou non) :
    rond 48 px, dégradé bleu, icône blanche, liseré blanc, ombre bleue */
@@ -366,11 +361,10 @@ h1, h2 { color: var(--texte); }
   width: 48px;
   height: 48px;
   padding: 0;
-  border: 2px solid white;
+  border: none;
   border-radius: 50%;
-  background: linear-gradient(160deg, #3f86b5, #2c6e9a);
-  color: white;
-  box-shadow: 0 8px 18px rgba(44, 110, 154, 0.45);
+  background: var(--sage);
+  color: var(--on-primary);
 }
 .bouton-accueil .icone-svg { width: 24px; height: 24px; }
 
@@ -384,9 +378,8 @@ h1, h2 { color: var(--texte); }
   padding: 0;
   border: none;
   border-radius: 50%;
-  background: linear-gradient(160deg, #ff9b54, #ff6a00);
-  color: var(--texte);
-  box-shadow: 0 8px 18px rgba(255, 106, 0, 0.35);
+  background: var(--primary);
+  color: var(--on-primary);
 }
 .bouton-plus .icone-svg { width: 28px; height: 28px; stroke-width: 2.5; }
 
@@ -426,7 +419,7 @@ h1, h2 { color: var(--texte); }
   margin: 0 auto;
   padding: 12px;
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--card);
 }
 .menu-categories[open] .menu-carte { animation: apparaitre-bas 220ms ease-out backwards; }
 .choix-menu {
@@ -450,9 +443,9 @@ h1, h2 { color: var(--texte); }
   width: 52px;
   height: 52px;
   border-radius: 50%;
-  background: white;
+  background: var(--card);
   color: var(--bleu);
-  box-shadow: 0 4px 12px rgba(10, 35, 66, 0.12);
+  box-shadow: var(--shadow-card);
 }
 .rond-menu .icone-svg { width: 26px; height: 26px; }
 /* Les choix apparaissent l'un après l'autre (40 ms d'écart, 200 ms chacun) */
@@ -484,10 +477,10 @@ h1, h2 { color: var(--texte); }
   max-height: min(85vh, calc(var(--visible-ecran, 100vh) - 8px));
   padding: 0;
   border: var(--verre-bord);
-  background: rgba(255, 255, 255, 0.82);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
-  box-shadow: 0 10px 30px rgba(10, 35, 66, 0.16);
+  background: var(--card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  box-shadow: var(--shadow-bar);
   color: var(--texte);
   overflow-y: auto;
 }
@@ -570,7 +563,7 @@ h1, h2 { color: var(--texte); }
   margin-bottom: 8px;
   border: var(--verre-bord);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--card);
   color: var(--texte);
   font: inherit;
   font-size: 16px;
@@ -599,14 +592,14 @@ h1, h2 { color: var(--texte); }
   padding: 0 8px;
   border-radius: 13px;
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-size: 13px;
   font-weight: 700;
 }
 .chevron { width: 18px; height: 18px; color: var(--gris); }
 
 /* Listes dans les panneaux : cartes blanches, sans ombre */
-.panneau .carte { background: rgba(255, 255, 255, 0.75); box-shadow: none; }
+.panneau .carte { background: var(--card); box-shadow: none; }
 .panneau .mentions { margin-top: 14px; }
 
 /* Panneau d'actions : titre de l'élément puis grands boutons */
@@ -635,7 +628,7 @@ h1, h2 { color: var(--texte); }
 }
 .bouton-action.supprimer { color: var(--rouge); }
 /* Premier appui sur « Supprimer » : rouge plein, il faut confirmer */
-.bouton-action.supprimer.confirmer { background: var(--rouge); color: white; }
+.bouton-action.supprimer.confirmer { background: var(--rouge); color: var(--on-primary); }
 
 /* Modification dans le panneau : étiquette + champ */
 form.edition { display: flex; flex-direction: column; gap: 6px; }
@@ -660,7 +653,7 @@ form.edition .boutons-actions { margin-top: 10px; }
 .boutons-sauvegarde button[type="submit"] {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--texte);
+  color: var(--on-primary);
   font-weight: 700;
 }
 
@@ -669,7 +662,7 @@ button.secondaire,
 .bouton-action.secondaire {
   background: var(--bleu);
   border-color: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-weight: 600;
 }
 
@@ -842,7 +835,7 @@ html.verrou body { overflow: hidden; }
   padding: 10px 16px;
   border: 2px solid var(--bleu);
   border-radius: 24px;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--card);
   color: var(--bleu);
   font-size: 15px;
   font-weight: 600;
@@ -874,7 +867,7 @@ html.verrou body { overflow: hidden; }
   padding: 8px 10px 8px 8px;
   border: var(--verre-bord);
   border-radius: 26px;
-  background: rgba(233, 238, 245, 0.75);
+  background: var(--surface);
   color: var(--texte);
   font-size: 16px;
   text-align: left;
@@ -889,7 +882,7 @@ html.verrou body { overflow: hidden; }
   padding: 8px 14px;
   border-radius: 999px;
   background: var(--accent);
-  color: var(--texte);
+  color: var(--on-primary);
   font-size: 14px;
   font-weight: 700;
   transition: background-color var(--duree) ease-out;
@@ -914,13 +907,13 @@ html.verrou body { overflow: hidden; }
   border-radius: 24px;
   border: 1px solid var(--bleu);
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-weight: 600;
 }
 
 .message { font-size: 14px; padding: 10px 14px; border-radius: 18px; }
-.message.succes { background: #e3f5e8; color: #1e6b34; }
-.message.erreur { background: #fde8e8; color: #a8282c; }
+.message.succes { background: var(--sage-tint); color: var(--on-sage-tint); }
+.message.erreur { background: var(--error-tint); color: var(--error); }
 
 .champ-reglage {
   width: 100%;
@@ -943,9 +936,9 @@ html.verrou body { overflow: hidden; }
   border: var(--verre-bord);
   border-radius: 30px;
   padding: 22px;
-  background: rgba(255, 255, 255, 0.9);
-  -webkit-backdrop-filter: blur(18px);
-  backdrop-filter: blur(18px);
+  background: var(--card);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   color: var(--texte);
 }
 #fenetre-import::backdrop { background: var(--voile); }
@@ -953,7 +946,7 @@ html.verrou body { overflow: hidden; }
 #conseil-sauvegarde, #info-sauvegarde-faite { font-size: 14px; color: var(--gris); }
 
 .boutons-fenetre { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-.boutons-fenetre .danger { background: var(--rouge); border-color: var(--rouge); color: white; }
+.boutons-fenetre .danger { background: var(--rouge); border-color: var(--rouge); color: var(--on-primary); }
 
 /* ---------- Recettes : lien et note ---------- */
 /* Dans le calque d'ajout : ligne « Lien », puis la note */
@@ -987,10 +980,10 @@ form.edition textarea {
 .bouton-contour.mise-en-avant {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--texte);
+  color: var(--on-primary);
   font-weight: 700;
 }
-.bouton-contour.mise-en-avant .icone-svg { color: var(--texte); }
+.bouton-contour.mise-en-avant .icone-svg { color: var(--on-primary); }
 @media (hover: hover) {
   .bouton-contour.mise-en-avant:hover { background: var(--accent-survol); border-color: var(--accent-survol); filter: none; }
 }
@@ -1048,9 +1041,7 @@ form.edition .message { margin: 4px 0 0; }
 }
 .fiche-page::backdrop {
   background:
-    radial-gradient(70vmax 60vmax at -10% -5%, rgba(44, 110, 154, 0.26), transparent 60%),
-    radial-gradient(60vmax 55vmax at 110% 50%, rgba(255, 155, 84, 0.24), transparent 60%),
-    linear-gradient(170deg, #eef3fa, #dde8f5 55%, #e6ecf6);
+    var(--background);
 }
 /* Arrivée : glisse un peu depuis la droite avec un fondu */
 .fiche-page[open] { animation: arriver-droite 260ms var(--courbe); }
@@ -1071,12 +1062,12 @@ form.edition .message { margin: 4px 0 0; }
 }
 .fiche-retour {
   pointer-events: auto;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--card);
   border: var(--verre-bord);
   box-shadow: var(--verre-ombre);
   color: var(--bleu);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 /* Photos : grande, 4:3, coins de 28 px, défilement horizontal qui « cale »
@@ -1100,7 +1091,7 @@ form.edition .message { margin: 4px 0 0; }
   border-radius: 28px;
   overflow: hidden;
   scroll-snap-align: center;
-  background: linear-gradient(160deg, var(--texte), var(--bleu));
+  background: var(--surface-high);
   color: var(--accent-survol);
 }
 .fiche-photo .icone-svg { width: 48px; height: 48px; stroke-width: 1.5; }
@@ -1127,7 +1118,7 @@ form.edition .message { margin: 4px 0 0; }
   width: 8px;
   height: 8px;
   border-radius: 4px;
-  background: rgba(10, 35, 66, 0.22);
+  background: var(--dotted);
   transition: width var(--duree) var(--courbe), background-color var(--duree) ease-out;
 }
 .fiche-point.actif { width: 20px; background: var(--accent); }
@@ -1138,7 +1129,7 @@ form.edition .message { margin: 4px 0 0; }
 #fiche-titre {
   margin: 2px 0 0;
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.15;
   letter-spacing: -0.02em;
   word-break: break-word;
@@ -1169,7 +1160,7 @@ form.edition .message { margin: 4px 0 0; }
   padding: 0 18px;
   border-radius: 22px;
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-weight: 600;
   text-decoration: none;
 }
@@ -1177,7 +1168,7 @@ form.edition .message { margin: 4px 0 0; }
 /* Blocs Ingrédients et Étapes */
 .fiche-bloc { margin-top: 16px; padding: 16px; border-radius: 30px; }
 .fiche-bloc h3,
-.fiche-titre-bloc { margin: 0 0 12px; font-size: 19px; font-weight: 800; }
+.fiche-titre-bloc { margin: 0 0 12px; font-size: 19px; font-weight: 500; }
 .fiche-titre-bloc { margin: 24px 4px 12px; }
 
 /* Sélecteur « − Pour 4 personnes + » */
@@ -1187,7 +1178,7 @@ form.edition .message { margin: 4px 0 0; }
   gap: 8px;
   padding: 4px;
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.75);
+  background: var(--card);
   border: var(--verre-bord);
 }
 #portions-texte { flex: 1; margin: 0; text-align: center; font-weight: 700; font-size: 16px; }
@@ -1202,7 +1193,7 @@ form.edition .message { margin: 4px 0 0; }
   border: none;
   border-radius: 50%;
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
 }
 .bouton-portions .icone-svg { stroke-width: 2.5; }
 .bouton-portions:disabled { opacity: 0.35; cursor: default; }
@@ -1224,7 +1215,7 @@ form.edition .message { margin: 4px 0 0; }
 .fiche-ingredients { list-style: none; padding: 0; margin: 8px 0 0; }
 .fiche-ingredients li {
   padding: 11px 4px;
-  border-bottom: 1px solid rgba(10, 35, 66, 0.08);
+  border-bottom: 1px solid var(--line);
   font-size: 16px;
   word-break: break-word;
 }
@@ -1250,13 +1241,13 @@ form.edition .message { margin: 4px 0 0; }
   flex-shrink: 0;
   border-radius: 50%;
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-size: 15px;
-  font-weight: 800;
+  font-weight: 500;
 }
 .fiche-etape p { margin: 5px 0 0; font-size: 16px; line-height: 1.45; word-break: break-word; }
 /* Titre de partie (« La pâte ») entre deux étapes */
-.fiche-section { margin: 18px 6px 10px; font-size: 16px; font-weight: 800; color: var(--bleu); }
+.fiche-section { margin: 18px 6px 10px; font-size: 16px; font-weight: 500; color: var(--bleu); }
 .fiche-section:first-child { margin-top: 0; }
 
 .fiche-boutons { margin-top: 24px; }
@@ -1300,7 +1291,7 @@ form.edition .message { margin: 4px 0 0; }
   padding: 10px 18px;
   border-radius: 24px;
   font-size: 17px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .page-ia .fiche-bloc h3 { display: flex; align-items: baseline; gap: 8px; }
@@ -1320,7 +1311,7 @@ form.edition .message { margin: 4px 0 0; }
   aspect-ratio: 1;
   border-radius: 20px;
   overflow: hidden;
-  background: linear-gradient(160deg, var(--texte), var(--bleu));
+  background: var(--surface-high);
   box-shadow: var(--verre-ombre);
   animation: miniature-arrive 200ms var(--courbe);
 }
@@ -1336,7 +1327,7 @@ form.edition .message { margin: 4px 0 0; }
   padding: 0;
   border: none;
   background: none;
-  color: white;
+  color: var(--on-primary);
   font-size: 14px;
   font-weight: 700;
 }
@@ -1346,7 +1337,7 @@ form.edition .message { margin: 4px 0 0; }
   inset: 7px;
   z-index: -1;
   border-radius: 50%;
-  background: rgba(10, 35, 66, 0.7);
+  background: var(--scrim-strong);
 }
 .ia-retirer { isolation: isolate; }
 .page-ia #ia-ajouter-photo:disabled { opacity: 0.6; cursor: progress; }
@@ -1413,8 +1404,8 @@ form.edition .message { margin: 4px 0 0; }
   margin-top: 4px;
   padding: 14px 16px;
   border-radius: 24px;
-  background: #ffe6d3;
-  border: 1px solid var(--accent-survol);
+  background: var(--amber-tint);
+  border: 1px solid var(--outline);
   color: var(--texte);
   font-size: 14px;
 }
@@ -1485,11 +1476,11 @@ form.edition .ia-photo-choix input {
   padding: 0;
   border: var(--verre-bord);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--card);
   box-shadow: var(--verre-ombre);
   color: var(--bleu);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 .bouton-verre-rond .icone-svg { width: 24px; height: 24px; stroke-width: 2.4; }
 .icone-plein { fill: currentColor; stroke: none; }
@@ -1517,7 +1508,7 @@ form.edition .ia-photo-choix input {
   font-size: 16px;
   text-align: left;
 }
-.notes-menu button + button { border-top: 1px solid rgba(10, 35, 66, 0.08); border-radius: 0 0 16px 16px; }
+.notes-menu button + button { border-top: 1px solid var(--line); border-radius: 0 0 16px 16px; }
 .notes-menu .notes-menu-rouge { color: var(--rouge); }
 .notes-menu button:disabled { opacity: 0.4; cursor: default; }
 
@@ -1525,7 +1516,7 @@ form.edition .ia-photo-choix input {
 .notes-titre {
   margin: 6px 4px 10px;
   font-size: 34px;
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.1;
   letter-spacing: -0.02em;
   color: var(--texte);
@@ -1537,7 +1528,7 @@ form.edition .ia-photo-choix input {
   padding: 6px 14px;
   border-radius: 16px;
   background: var(--bleu);
-  color: white;
+  color: var(--on-primary);
   font-size: 14px;
   font-weight: 600;
   animation: fondu 180ms ease-out;
@@ -1554,7 +1545,7 @@ form.edition .ia-photo-choix input {
   right: 0;
   bottom: 0;
   height: 1px;
-  background: rgba(10, 35, 66, 0.08);
+  background: var(--line);
 }
 .note-glisse {
   position: relative;
@@ -1578,7 +1569,7 @@ form.edition .ia-photo-choix input {
   flex-shrink: 0;
   margin-top: -1px;
   padding: 0;
-  border: 2px solid #8fa3ba;
+  border: 2px solid var(--ink-muted);
   border-radius: 50%;
   background: transparent;
   transition: background-color 180ms ease-out, border-color 180ms ease-out;
@@ -1587,7 +1578,7 @@ form.edition .ia-photo-choix input {
 .note-crochet {
   width: 18px;
   height: 18px;
-  stroke: white;
+  stroke: var(--on-primary);
   stroke-width: 3;
   opacity: 0;
   transform: scale(0.6);
@@ -1616,11 +1607,11 @@ form.edition .ia-photo-choix input {
   overflow: hidden;
   word-break: break-word;
 }
-.note-texte::placeholder { color: #8fa3ba; }
+.note-texte::placeholder { color: var(--ink-muted); font-style: italic; }
 .note.fait .note-texte {
   color: var(--gris);
   text-decoration: line-through;
-  text-decoration-color: rgba(74, 93, 120, 0.6);
+  text-decoration-color: var(--ink-muted);
 }
 
 /* « Supprimer » rouge derrière la ligne, révélé en glissant vers la gauche */
@@ -1634,7 +1625,7 @@ form.edition .ia-photo-choix input {
   padding: 0;
   border: none;
   background: var(--rouge);
-  color: white;
+  color: var(--on-primary);
   font: inherit;
   font-size: 15px;
   font-weight: 600;
@@ -1667,7 +1658,7 @@ form.edition .ia-photo-choix input {
   .note-supprimer-survol { display: flex; opacity: 0; transition: opacity 150ms ease-out; }
   .note:hover .note-supprimer-survol,
   .note-supprimer-survol:focus-visible { opacity: 1; }
-  .note-supprimer-survol:hover { color: var(--rouge); background: rgba(180, 35, 24, 0.08); }
+  .note-supprimer-survol:hover { color: var(--rouge); background: var(--error-tint); }
 }
 
 .notes-vide { margin: 14px 4px 0 46px; font-size: 14px; color: var(--gris); }
@@ -1702,13 +1693,7 @@ form.edition .ia-photo-choix input {
 .mentions p a { color: inherit; text-decoration: underline; }
 
 /* ---------- Replis ---------- */
-/* Navigateur sans flou : verre presque opaque, pour rester lisible */
-@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .verre-flou,
-  .barre-bas,
-  .panneau,
-  #fenetre-import { background: rgba(255, 255, 255, 0.95); }
-}
+
 /* « Réduire la transparence » activé sur l'iPhone (Accessibilité) :
    plus de flou ni de transparence, tout devient blanc opaque */
 @media (prefers-reduced-transparency: reduce) {
@@ -1723,7 +1708,7 @@ form.edition .ia-photo-choix input {
   .portions,
   .bouton-verre-rond,
   #fenetre-import {
-    background: white;
+    background: var(--card);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
