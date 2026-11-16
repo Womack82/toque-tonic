@@ -2055,6 +2055,51 @@ form.edition .ia-photo-choix input { min-height: 0; box-shadow: none; }
   }
 }
 
+/* ---------- Animations des actions (v1.17) ---------- */
+/* Toutes entre 160 et 260 ms, coupées par « Réduire les animations » (plus bas) */
+
+/* Changement de page (Accueil ↔ Recettes, Cocktails, Favoris) : fondu qui monte */
+#page-accueil:not([hidden]),
+#page-categorie:not([hidden]) { animation: page-arrive 240ms var(--courbe); }
+@keyframes page-arrive { from { opacity: 0; transform: translateY(8px); } }
+
+/* Cartes des listes : elles arrivent l'une après l'autre (recherche, filtre, tri…) */
+.liste-cartes > li { animation: carte-arrive 240ms var(--courbe) backwards; }
+.liste-cartes > li:nth-child(2) { animation-delay: 30ms; }
+.liste-cartes > li:nth-child(3) { animation-delay: 60ms; }
+.liste-cartes > li:nth-child(4) { animation-delay: 90ms; }
+.liste-cartes > li:nth-child(5) { animation-delay: 120ms; }
+.liste-cartes > li:nth-child(6) { animation-delay: 150ms; }
+.liste-cartes > li:nth-child(n+7) { animation-delay: 180ms; }
+@keyframes carte-arrive { from { opacity: 0; transform: translateY(10px); } }
+
+/* Fiche : photo, ingrédients et étapes apparaissent en douceur ; les
+   quantités se redessinent en fondu quand on change les portions */
+.fiche-page[open] .fiche-photo img:not(.fiche-photo-fond) { animation: fondu 260ms ease-out; }
+.fiche-ingredients > li { animation: fondu 200ms ease-out backwards; }
+.fiche-etapes > li { animation: carte-arrive 240ms var(--courbe) backwards; }
+.fiche-etapes > li:nth-child(2) { animation-delay: 30ms; }
+.fiche-etapes > li:nth-child(3) { animation-delay: 60ms; }
+.fiche-etapes > li:nth-child(n+4) { animation-delay: 90ms; }
+
+/* Favori : le signet se remplit avec un petit rebond */
+#fiche-favori .icone { transition: fill var(--duration) var(--easing); }
+#fiche-favori .icone.plein { animation: rebond 260ms var(--courbe); }
+@keyframes rebond { 40% { transform: scale(1.25); } }
+
+/* Onglet de la barre du bas qui devient actif : l'icône remonte un peu */
+.tabbar-onglet.actif .icone { animation: rebond 240ms var(--courbe); }
+
+/* Filtres Tout / Recettes / Cocktails : petit rebond à l'appui */
+.filtre { transition: background-color var(--duration) var(--easing), border-color var(--duration) var(--easing), color var(--duration) var(--easing), transform var(--duration) var(--easing); }
+.filtre:active { transform: scale(0.96); }
+
+/* Messages (enregistré, erreur…) : arrivent en fondu */
+.message:not([hidden]) { animation: page-arrive 200ms var(--courbe); }
+
+/* Mode cuisine : la barre de progression se remplit en douceur */
+.cuisine-segments span { transition: background-color 220ms var(--easing), opacity 220ms var(--easing); }
+
 /* ---------- « Réduire les animations » activé sur l'appareil ---------- */
 /* Réglages iPhone > Accessibilité > Mouvement : on coupe toutes les animations */
 /* (app.js vérifie aussi ce réglage : la carte cochée disparaît alors d'un coup) */
@@ -2068,7 +2113,8 @@ form.edition .ia-photo-choix input { min-height: 0; box-shadow: none; }
   button:active,
   .bouton-action:active,
   .ligne-reglage:active,
-  .carte-fiche-corps:active { transform: none; }
+  .carte-fiche-corps:active,
+  .filtre:active { transform: none; }
   /* La roue de chargement ne tourne plus : le texte « Analyse en cours… » suffit */
   .ia-roue { animation: none; border-color: var(--accent); }
 }
