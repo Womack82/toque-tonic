@@ -1,0 +1,276 @@
+/* ============================================================
+   composants.css : les briques de base de l'interface
+   Icône, textes, Button, Badge (pilule), Card, SearchField,
+   TabBar flottante. Elles n'utilisent que les réglages de theme.css.
+   Chargé après theme.css et avant style.css (voir index.html).
+   ============================================================ */
+
+/* ---------- Icône (icones.js) ---------- */
+.icone {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.icone.petite { width: 18px; height: 18px; }
+/* Icône remplie (ex. signet d'un favori) */
+.icone.plein { fill: currentColor; }
+
+/* ---------- Textes ---------- */
+.t-ecran {            /* titre d'écran : Newsreader 36/44 */
+  margin: 0;
+  font: var(--text-screen-title);
+  letter-spacing: var(--tracking-title);
+  color: var(--ink);
+}
+.t-section { margin: 0; font: var(--text-section-title); color: var(--ink); }
+.t-carte { margin: 0; font: var(--text-card-title); color: var(--ink); }
+.t-italique { font-style: italic; color: var(--ink-muted); }
+.t-libelle {          /* capitales espacées 12/16 */
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.t-libelle-petit {    /* capitales espacées 10/14 */
+  font: var(--text-label-small);
+  letter-spacing: var(--tracking-label-small);
+  text-transform: uppercase;
+}
+.t-quantite {
+  font: var(--text-quantity);
+  font-variant-numeric: tabular-nums;
+}
+/* Surtitre terracotta précédé d'un point : « • MON CARNET » */
+.surtitre {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  color: var(--primary);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+}
+.surtitre::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: currentColor;
+}
+
+/* ---------- Button ---------- */
+/* .btn + une variante : .btn-principal (terracotta plein),
+   .btn-secondaire (contour sauge), .btn-texte (sans fond) */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--touch);
+  padding: 0 var(--space-5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-button);
+  background: none;
+  color: var(--ink);
+  font: var(--text-label);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration) var(--easing),
+              border-color var(--duration) var(--easing),
+              transform var(--duration) var(--easing);
+}
+.btn:active { transform: scale(0.98); }
+.btn:disabled { opacity: 0.5; cursor: default; transform: none; }
+.btn .icone { width: 20px; height: 20px; }
+.btn-bloc { display: flex; width: 100%; }
+.btn-grand { min-height: 52px; }
+
+.btn-principal { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
+.btn-principal:active { background: var(--primary-pressed); border-color: var(--primary-pressed); }
+
+.btn-secondaire { border-color: var(--sage); color: var(--sage); }
+.btn-secondaire:active { background: var(--sage-tint); }
+
+.btn-texte { padding: 0 var(--space-3); color: var(--primary); }
+.btn-texte:active { background: var(--primary-tint); }
+
+.btn-danger { border-color: var(--error); color: var(--error); }
+.btn-danger:active { background: var(--error-tint); }
+
+@media (hover: hover) {
+  .btn-principal:hover { background: var(--primary-pressed); border-color: var(--primary-pressed); }
+  .btn-secondaire:hover { background: var(--sage-tint); }
+  .btn-texte:hover { background: var(--primary-tint); }
+  .btn-danger:hover { background: var(--error-tint); }
+}
+
+/* Bouton rond avec une icône seule (retour, modifier, favori, profil) */
+.btn-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch);
+  height: var(--touch);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-full);
+  background: var(--card);
+  color: var(--ink);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration) var(--easing), transform var(--duration) var(--easing);
+}
+.btn-icone:active { background: var(--surface); transform: scale(0.96); }
+.btn-icone[aria-pressed="true"] { color: var(--primary); }
+
+/* ---------- Badge / Pill ---------- */
+/* .pilule + une variante : -recette (sauge), -cocktail (ambre),
+   -alerte (terracotta), -neutre */
+.pilule {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) 10px;
+  border-radius: var(--radius-full);
+  font: var(--text-label-small);
+  letter-spacing: var(--tracking-label-small);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.pilule .icone { width: 14px; height: 14px; }
+.pilule-recette { background: var(--sage-tint); color: var(--on-sage-tint); }
+.pilule-cocktail { background: var(--amber-tint); color: var(--on-amber-tint); }
+.pilule-alerte { background: var(--primary-tint); color: var(--primary); }
+.pilule-neutre { background: var(--surface); color: var(--ink-muted); }
+
+/* ---------- Card ---------- */
+.carte-papier {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+/* Cadre pointillé (emplacement photo vide) */
+.cadre-pointille {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1.5px dashed var(--dotted);
+  border-radius: var(--radius-card);
+  background: var(--surface-low);
+  color: var(--ink-muted);
+}
+
+/* ---------- SearchField ---------- */
+.recherche {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 48px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-inset);
+  color: var(--ink-muted);
+}
+.recherche input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink);
+  font: var(--text-body);
+  font-size: 17px; /* 16 px au moins : l'iPhone ne zoome pas sur le champ */
+  outline: none;
+}
+.recherche input::placeholder { color: var(--ink-muted); font-style: italic; opacity: 1; }
+.recherche:focus-within { box-shadow: var(--shadow-inset), 0 0 0 2px var(--primary); }
+
+/* ---------- TabBar flottante ---------- */
+/* Décollée de 16 px des côtés et de 28 px du bas (+ zone de sécurité de
+   l'iPhone). 5 emplacements : 4 onglets et le bouton + au centre. */
+.tabbar {
+  position: fixed;
+  z-index: 20;
+  left: max(var(--space-4), calc(50% - 284px));
+  right: max(var(--space-4), calc(50% - 284px));
+  bottom: calc(28px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-bar);
+  background: var(--card);
+  box-shadow: var(--shadow-bar);
+}
+.tabbar-onglet {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 56px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-tab);
+  background: none;
+  color: var(--ink-muted);
+  font: var(--text-label-small);
+  letter-spacing: var(--tracking-label-small);
+  text-transform: uppercase;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration) var(--easing), color var(--duration) var(--easing);
+}
+.tabbar-onglet.actif,
+.tabbar-onglet[aria-current="page"] { background: var(--primary-tint); color: var(--primary); }
+/* Bouton + : rond terracotta de 52 px, centré dans la barre (il ne dépasse pas) */
+.tabbar-plus {
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-full);
+  background: var(--primary);
+  color: var(--on-primary);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color var(--duration) var(--easing), transform var(--duration) var(--easing);
+}
+.tabbar-plus .icone { width: 26px; height: 26px; stroke-width: 2; }
+.tabbar-plus:active { background: var(--primary-pressed); transform: scale(0.95); }
+/* Place à garder sous le contenu des écrans pour qu'il ne passe pas
+   sous la barre : hauteur de la barre (72) + écart (28) + marge (24) */
+.place-tabbar { padding-bottom: calc(124px + env(safe-area-inset-bottom)); }
+
+/* Contour visible au clavier (touche Tab) */
+.btn:focus-visible,
+.btn-icone:focus-visible,
+.tabbar-onglet:focus-visible,
+.tabbar-plus:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* « Réduire les animations » : pas d'effet d'appui */
+@media (prefers-reduced-motion: reduce) {
+  .btn:active, .btn-icone:active, .tabbar-plus:active { transform: none; }
+}

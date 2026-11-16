@@ -15,3 +15,4 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 - [x] v1.1 — Notes : bouton retiré de la barre du bas, elles restent seulement dans Réglages → Notes. Barre : Accueil, Recettes | + | Cocktails
 - [x] v1.2 — Nouvelle icône « T&T » (badge terracotta) : icône de l'écran d'accueil, de l'onglet du navigateur et icône adaptative Android ; logo retiré de l'en-tête
 - [x] v1.3 — Refonte « Warm Editorial Gastronomy », étape 1 : couleurs, polices (Newsreader, Hanken Grotesk, dans `fonts/`), tailles, rayons et ombres réunis dans `theme.css` ; plus de dégradés ni d'effet verre ; barre d'état crème
+- [x] v1.4 — Refonte, étape 2 : icônes « Trait fin » (`icones.js`) et composants de base (`composants.css` : boutons, badges, cartes, champ de recherche, barre d'onglets flottante) ; page de contrôle `galerie.html`

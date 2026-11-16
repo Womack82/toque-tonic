@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Toque&amp;Tonic · Galerie des composants</title>
+  <!-- Page de contrôle (pas dans l'app, pas mise en cache) : montre les
+       icônes et les composants de base pour vérifier leur apparence. -->
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="theme.css">
+  <link rel="stylesheet" href="composants.css">
+  <style>
+    body { margin: 0; padding: 0 var(--screen-margin); background: var(--background); color: var(--ink); font: var(--text-body); }
+    main { max-width: 600px; margin: 0 auto; padding-top: 48px; }
+    section { margin-top: var(--space-8); display: flex; flex-direction: column; gap: var(--space-3); }
+    .rangee { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+    .icones { display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3); }
+    .icones figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--space-1); font: var(--text-label-small); color: var(--ink-muted); }
+    .demo-carte { padding: var(--space-4); }
+    .demo-photo { height: 140px; }
+  </style>
+</head>
+<body>
+  <main class="place-tabbar">
+    <p class="surtitre">Galerie</p>
+    <h1 class="t-ecran">Composants</h1>
+    <p class="t-italique">Les briques de base de Toque&amp;Tonic.</p>
+
+    <section>
+      <h2 class="t-section">Icônes</h2>
+      <div id="icones" class="icones"></div>
+    </section>
+
+    <section>
+      <h2 class="t-section">Boutons</h2>
+      <div class="rangee">
+        <button class="btn btn-principal">Enregistrer</button>
+        <button class="btn btn-secondaire">Précédent</button>
+        <button class="btn btn-texte"><svg data-icone="trier"></svg>Trier</button>
+      </div>
+      <div class="rangee">
+        <button class="btn-icone" aria-label="Retour"><svg data-icone="retour"></svg></button>
+        <button class="btn-icone" aria-label="Modifier"><svg data-icone="crayon"></svg></button>
+        <button class="btn-icone" aria-label="Favori" aria-pressed="true"><svg data-icone="signet" class="plein"></svg></button>
+        <button class="btn-icone" aria-label="Profil"><svg data-icone="profil"></svg></button>
+        <button class="btn btn-danger">Supprimer</button>
+      </div>
+      <button class="btn btn-principal btn-bloc btn-grand">Lancer le mode cuisine</button>
+    </section>
+
+    <section>
+      <h2 class="t-section">Badges</h2>
+      <div class="rangee">
+        <span class="pilule pilule-recette">Recette</span>
+        <span class="pilule pilule-cocktail">Cocktail</span>
+        <span class="pilule pilule-alerte">Contient de l'alcool</span>
+        <span class="pilule pilule-neutre">2 sur 8 prêts</span>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="t-section">Champ de recherche</h2>
+      <label class="recherche">
+        <svg data-icone="recherche"></svg>
+        <input type="search" placeholder="Titre, ingrédient, source…" aria-label="Rechercher">
+      </label>
+    </section>
+
+    <section>
+      <h2 class="t-section">Cartes</h2>
+      <div class="carte-papier demo-carte">
+        <span class="pilule pilule-recette">Recette</span>
+        <h3 class="t-carte">Tarte tatin</h3>
+        <p class="t-italique" style="margin:0">marmiton.org</p>
+      </div>
+      <div class="cadre-pointille demo-photo">
+        <svg data-icone="appareil"></svg>
+        <span class="t-libelle">Ajouter une photo</span>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tabbar" aria-label="Navigation">
+    <button class="tabbar-onglet actif" aria-current="page"><svg data-icone="maison"></svg>Accueil</button>
+    <button class="tabbar-onglet"><svg data-icone="toque"></svg>Recettes</button>
+    <button class="tabbar-plus" aria-label="Ajouter"><svg data-icone="plus"></svg></button>
+    <button class="tabbar-onglet"><svg data-icone="coupe"></svg>Cocktails</button>
+    <button class="tabbar-onglet"><svg data-icone="signet"></svg>Favoris</button>
+  </nav>
+
+  <script src="icones.js"></script>
+  <script>
+    // Toutes les icônes, avec leur nom
+    const zone = document.getElementById("icones");
+    for (const nom of Object.keys(ICONES)) {
+      const figure = document.createElement("figure");
+      const legende = document.createElement("figcaption");
+      legende.textContent = nom;
+      figure.append(icone(nom), legende);
+      zone.append(figure);
+    }
+  </script>
+</body>
+</html>
