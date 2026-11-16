@@ -7,7 +7,7 @@
 // téléphone continuera d'utiliser l'ancienne copie :
 // chaque changement ajoute 1 au second numéro : v1.0 → v1.1 → v1.2…
 // ⚠️ Change aussi VERSION en haut de app.js (affichée dans Réglages).
-const NOM_CACHE = "toque-tonic-v1.1";
+const NOM_CACHE = "toque-tonic-v1.2";
 
 // ⚠️ Si un seul de ces fichiers est introuvable, rien n'est mis en cache
 // (l'app ne marchera pas hors ligne) : vérifier chaque chemin.
@@ -21,13 +21,12 @@ const FICHIERS = [
   "app.js",
   "notes.js",
   "manifest.json",
-  // Logo et icônes (dossier icons)
-  "icons/logo-toque.svg",
-  "icons/icon.svg",
-  "icons/apple-touch-icon.png",
-  "icons/icon-192.png",
-  "icons/icon-512.png",
-  "icons/favicon-32.png",
+  // Icônes de l'app (dossier icons). Pour changer l'icône, remplacer
+  // ces fichiers en gardant les mêmes noms et tailles (voir TODO.md).
+  "icons/icone-180.png",
+  "icons/icone-192.png",
+  "icons/icone-512.png",
+  "icons/icone-32.png",
 ];
 
 // À l'installation : on met tous les fichiers en cache

@@ -123,14 +123,6 @@ h1, h2 { color: var(--texte); }
   white-space: nowrap;
 }
 
-/* Logo W : à gauche de « Bonjour Womack », plus petit, pâli à 40 % */
-.titre-app {
-  flex-shrink: 0;
-  margin: 0;
-  pointer-events: none;
-}
-.logo { display: block; width: 40px; height: auto; opacity: 0.4; }
-
 .entete-boutons { position: relative; z-index: 1; display: flex; gap: 8px; flex-shrink: 0; }
 /* Bouton rond de 48 px (Réglages) : verre, icône bleue */
 .bouton-entete {
