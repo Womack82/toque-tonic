@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <!-- Adapte l'affichage à la largeur de l'écran du téléphone -->
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>Toque&amp;Tonic</title>
 
   <!-- Réglages pour l'iPhone quand l'app est ajoutée à l'écran d'accueil -->
@@ -23,7 +23,7 @@
   <!-- Briques de base : boutons, badges, cartes, recherche, barre d'onglets -->
   <link rel="stylesheet" href="composants.css">
   <link rel="stylesheet" href="style.css">
-</head>
+<style>html,body{touch-action:pan-x pan-y}</style><script>['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()},{passive:false})});document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});</script></head>
 <body>
   <main class="place-tabbar">
     <!-- En-tête : icône de l'app et « Bonjour Alex » à gauche, roue des

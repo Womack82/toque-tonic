@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
   <title>Toque&amp;Tonic · Galerie des composants</title>
   <!-- Page de contrôle (pas dans l'app, pas mise en cache) : montre les
        icônes et les composants de base pour vérifier leur apparence. -->
@@ -19,7 +19,7 @@
     .demo-carte { padding: var(--space-4); }
     .demo-photo { height: 140px; }
   </style>
-</head>
+<style>html,body{touch-action:pan-x pan-y}</style><script>['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,function(e){e.preventDefault()},{passive:false})});document.addEventListener('touchmove',function(e){if(e.touches.length>1)e.preventDefault()},{passive:false});</script></head>
 <body>
   <main class="place-tabbar">
     <p class="surtitre">Galerie</p>
