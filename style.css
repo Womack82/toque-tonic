@@ -376,7 +376,15 @@ button, input, select, textarea, .etiquette, .badge {
 .panneau-contenu { padding: 12px 16px 16px; }
 
 /* Panneau Réglages : collé en haut, coins du bas arrondis */
-.panneau-haut { margin: 0 auto auto; border-radius: 0 0 30px 30px; }
+/* Hauteur = contenu (pas de défilement) ; plafond = hauteur de l'écran
+   (100dvh, sans la barre de Safari). Le plafond « visible-ecran » mesuré
+   par visualViewport restait trop bas sur iPhone : on ne l'utilise plus ici. */
+.panneau-haut {
+  margin: 0 auto auto;
+  border-radius: 0 0 30px 30px;
+  max-height: calc(100vh - 8px);
+  max-height: calc(100dvh - 8px);
+}
 .panneau-haut .panneau-contenu { padding-top: calc(env(safe-area-inset-top) + 12px); }
 
 /* Panneau d'actions : collé en bas, coins du haut arrondis */

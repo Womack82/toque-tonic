@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.17";
+const VERSION = "v1.18";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site

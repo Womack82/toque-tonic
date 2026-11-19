@@ -30,4 +30,5 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 - [x] v1.15 — Portions : bouton « Revenir à 4 » retiré ; cocktails : dose et ingrédient sur la même ligne, comme les recettes (« 1 ½ oz de gin »)
 - [x] v1.16 — Unités : recettes toujours en g / kg et ml / L (livres, onces et tasses converties à l'affichage, la fiche enregistrée ne change pas) ; cocktails toujours en oz ; l'IA reçoit la même consigne
 - [x] v1.17 — Animations des actions (CSS seulement, 160 à 260 ms, coupées par « Réduire les animations ») : changement de page en fondu, cartes des listes l'une après l'autre, photo, ingrédients et étapes de la fiche en douceur, rebond du favori et de l'onglet actif, appui sur les filtres, messages en fondu, progression du mode cuisine
+- [x] v1.18 — Réglages : le panneau prend la hauteur de son contenu sur iPhone (Safari), sans défilement dans le panneau ; le plafond suit la hauteur de l'écran (100dvh) au lieu de la partie visible mesurée au clavier
 - [ ] Refonte : tester sur l'iPhone (mode cuisine, écran allumé, minuteur, photo), puis fusionner la branche « refonte-da » dans « main » pour publier
