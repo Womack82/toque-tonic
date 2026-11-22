@@ -307,6 +307,20 @@ function formaterNombre(x, fractions, separateur) {
   return String(arrondi).replace(".", separateur);
 }
 
+// Unité de mesure (g, ml, c. à soupe…) qui suit le nombre. Sans unité de
+// mesure, c'est un objet qu'on compte (« 2 œufs », « 1 oignon ») : on ne
+// peut pas écrire ¾ d'œuf, on arrondit donc à un nombre entier.
+const MOTIF_MESURE = /^(mg|g|kg|ml|cl|dl|l|cm|oz|lbs?|cups?|tasses?|c\.\s?à\s?(?:s|c|soupe|café)\.?|cuill(?:ère|ere)s?\s+à\s+(?:soupe|café)|cs|cc|càs|càc|pincées?)(?=\s|$|\.|,)/i;
+function estDenombrable(texte) {
+  return !MOTIF_MESURE.test(String(texte ?? "").trim());
+}
+// Quantité d'un objet compté, multipliée par le facteur : entier, au moins 1.
+// Quand le facteur vaut 1 (portions d'origine), rien ne change.
+function nombreEntierPour(x, facteur) {
+  if (Math.abs(facteur - 1) < 1e-9) return null;
+  return String(Math.max(1, Math.round(x)));
+}
+
 // Adapte une ligne d'ingrédient. facteur = personnes voulues / portions d'origine.
 // Renvoie { avant, quantite, apres } : la quantité adaptée est mise à part
 // pour pouvoir l'afficher en gras. Sans quantité reconnue (« Sel, poivre »),
@@ -347,8 +361,13 @@ function adapterDebut(ligne, facteur) {
   const enFraction = new RegExp(`[/⁄${CAR_FRACTIONS}]`).test(tout);
   const entiers = Number.isInteger(n1) && (n2 === null || Number.isInteger(n2));
   const separateur = /\d\.\d/.test(tout) ? "." : ",";
+  const denombrable = estDenombrable(ligne.slice(tout.length));
   const formater = (n) => {
     const x = n * facteur;
+    if (denombrable) {
+      const entier = nombreEntierPour(x, facteur);
+      if (entier) return entier;
+    }
     return formaterNombre(x, enFraction || (entiers && x < 10), separateur);
   };
   const t1 = formater(n1);
@@ -366,7 +385,8 @@ function adapterMot(ligne, facteur) {
   const m = MOTIF_MOT_QUANTITE.exec(ligne);
   if (!m) return null;
   const x = NOMBRES_EN_LETTRES[m[2].toLowerCase()] * facteur;
-  const quantite = formaterNombre(x, x < 10, ",");
+  const entier = estDenombrable(ligne.slice(m[0].length)) ? nombreEntierPour(x, facteur) : null;
+  const quantite = entier || formaterNombre(x, x < 10, ",");
   if (!quantite) return null;
   return { avant: m[1], quantite, apres: ligne.slice(m[0].length) };
 }
@@ -539,7 +559,8 @@ function ligneDepuisDetail(d) {
 function adapterDetail(d, facteur) {
   try {
     if (!detailValide(d) || !Number.isFinite(facteur) || facteur <= 0) return null;
-    const quantite = formaterQuantite(d.q * facteur, d.u);
+    const entier = estDenombrable(d.u) ? nombreEntierPour(d.q * facteur, facteur) : null;
+    const quantite = entier || formaterQuantite(d.q * facteur, d.u);
     if (!quantite) return null;
     const reste = [d.u.trim(), d.n.trim()].filter(Boolean).join(" ");
     return { avant: "", quantite, apres: reste ? ` ${reste}` : "" };
