@@ -33,4 +33,5 @@ on coche la case `[x]`, on la déplace dans « Fait » et on fait un commit Git.
 - [x] v1.18 — Réglages : le panneau prend la hauteur de son contenu sur iPhone (Safari), sans défilement dans le panneau ; le plafond suit la hauteur de l'écran (100dvh) au lieu de la partie visible mesurée au clavier
 - [x] v1.19 — Portions : les objets qu'on compte (« 2 œufs », « 1 oignon ») passent à un nombre entier quand on change les portions (jamais « ¾ d'œuf », au moins 1) ; les quantités mesurées (g, ml, c. à soupe…) gardent leurs fractions
 - [x] v1.20 — Barre du bas : le fond de l'onglet actif a plus de marge autour du texte (onglets de 64 px avec retrait)
+- [x] v1.21 — Mise à jour automatique : à l'ouverture et au retour dans l'app, Toque&Tonic vérifie la version en ligne et se recharge toute seule si elle est plus récente (pas pendant qu'une fenêtre est ouverte)
 - [ ] Refonte : tester sur l'iPhone (mode cuisine, écran allumé, minuteur, photo), puis fusionner la branche « refonte-da » dans « main » pour publier

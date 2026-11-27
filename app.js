@@ -7,7 +7,7 @@
 // ⚠️ Doit toujours être le même que NOM_CACHE dans service-worker.js
 // Chaque changement, quel qu'il soit, ajoute 1 au second numéro
 // (v1.0 → v1.1 → v1.2…).
-const VERSION = "v1.20";
+const VERSION = "v1.21";
 
 // Noms sous lesquels on range les données dans la mémoire du téléphone.
 // Ils commencent par « toque-tonic » : Wodo est publiée sur le même site
@@ -1756,6 +1756,38 @@ document.addEventListener("visibilitychange", () => {
     majMinuteur(); // le temps passé en arrière-plan est rattrapé
   }
 });
+
+// Mise à jour : à l'ouverture et au retour dans l'app, on regarde le numéro
+// de version en ligne (app.js, demande qui contourne le cache). S'il est plus
+// récent, l'app se recharge toute seule, une seule fois par version et par
+// session. On ne recharge pas pendant qu'une fenêtre est ouverte (saisie en cours).
+async function verifierNouvelleVersion() {
+  try {
+    if (location.protocol === "file:" || document.querySelector("dialog[open]")) return;
+    // Le navigateur vérifie aussi si le service worker a changé
+    const enregistrement = await navigator.serviceWorker?.getRegistration();
+    if (enregistrement) await enregistrement.update();
+    const reponse = await fetch(`app.js?verif=${Date.now()}`, { cache: "no-store" });
+    if (!reponse.ok) return;
+    const trouve = (await reponse.text()).match(/const VERSION = "(v[0-9.]+)"/);
+    if (!trouve || trouve[1] === VERSION) return;
+    let dejaRecharge = null;
+    try {
+      dejaRecharge = sessionStorage.getItem("toque-tonic-rechargee-vers");
+    } catch {}
+    if (dejaRecharge === trouve[1]) return;
+    try {
+      sessionStorage.setItem("toque-tonic-rechargee-vers", trouve[1]);
+    } catch {}
+    location.replace(`${location.pathname}?v=${trouve[1]}-${Date.now()}`);
+  } catch {
+    // Pas de réseau ou navigateur ancien : on reste sur la version en cours
+  }
+}
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible") verifierNouvelleVersion();
+});
+verifierNouvelleVersion();
 
 // « Changer la photo » / « Retirer la photo » : la photo de la fiche,
 // choisie dans la photothèque ou prise avec l'appareil photo, sans IA.
