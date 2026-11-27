@@ -237,8 +237,9 @@
   align-items: center;
   justify-content: center;
   gap: 2px;
-  height: 56px;
-  padding: 0;
+  /* Un peu plus haut et avec un retrait : le fond coloré ne touche plus le texte */
+  height: 64px;
+  padding: var(--space-1);
   border: none;
   border-radius: var(--radius-tab);
   background: none;
